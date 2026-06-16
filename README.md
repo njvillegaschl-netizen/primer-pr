@@ -2,15 +2,15 @@
 
 Mi primer repositorio para practicar el flujo de Pull Requests con Claude Code.
 
-## Que es esto
+## ¿Qué es esto?
 
-Un proyecto de practica para aprender a:
+Un proyecto de práctica para aprender a:
 
 - Crear ramas
 - Hacer commits
 - Abrir Pull Requests en GitHub
 
-## Como contribuir
+## ¿Cómo contribuir?
 
 1. Crea una rama: `git checkout -b mi-mejora`
 2. Haz tus cambios
@@ -18,5 +18,5 @@ Un proyecto de practica para aprender a:
 
 ## Recursos
 
-- [Documentacion de GitHub](https://docs.github.com)
+- [Documentación de GitHub](https://docs.github.com)
 - [Claude Code](https://claude.ai/code)
