@@ -26,6 +26,7 @@ app = Flask(__name__)
 MAX_CARACTERES = 5000
 PATRON_VOZ = re.compile(r"^[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural$")
 PATRON_VELOCIDAD = re.compile(r"^[+-]\d{1,3}%$")
+PATRON_TONO = re.compile(r"^[+-]\d{1,3}Hz$")
 
 # Voces en espanol recomendadas. Puedes ver la lista completa en /voces.
 VOCES_DESTACADAS = [
@@ -33,6 +34,10 @@ VOCES_DESTACADAS = [
     {"id": "es-MX-JorgeNeural", "nombre": "Jorge — Mexico (masculina)"},
     {"id": "es-CO-SalomeNeural", "nombre": "Salome — Colombia (femenina)"},
     {"id": "es-CO-GonzaloNeural", "nombre": "Gonzalo — Colombia (masculina)"},
+    {"id": "es-VE-SebastianNeural", "nombre": "Sebastian — Venezuela (masculina)"},
+    {"id": "es-VE-PaolaNeural", "nombre": "Paola — Venezuela (femenina)"},
+    {"id": "es-PE-AlexNeural", "nombre": "Alex — Peru (masculina)"},
+    {"id": "es-CL-LorenzoNeural", "nombre": "Lorenzo — Chile (masculina)"},
     {"id": "es-ES-ElviraNeural", "nombre": "Elvira — Espana (femenina)"},
     {"id": "es-ES-AlvaroNeural", "nombre": "Alvaro — Espana (masculina)"},
     {"id": "es-AR-ElenaNeural", "nombre": "Elena — Argentina (femenina)"},
@@ -71,6 +76,7 @@ def hablar():
     texto = (datos.get("texto") or "").strip()
     voz = (datos.get("voz") or VOZ_POR_DEFECTO).strip()
     velocidad = (datos.get("velocidad") or "+0%").strip()
+    tono = (datos.get("tono") or "+0Hz").strip()
 
     # Validacion de la entrada.
     if not texto:
@@ -86,9 +92,11 @@ def hablar():
         return jsonify({"error": "La voz seleccionada no es valida."}), 400
     if not PATRON_VELOCIDAD.match(velocidad):
         velocidad = "+0%"
+    if not PATRON_TONO.match(tono):
+        tono = "+0Hz"
 
     try:
-        audio = asyncio.run(_generar_audio(texto, voz, velocidad))
+        audio = asyncio.run(_generar_audio(texto, voz, velocidad, tono))
     except Exception as exc:  # pragma: no cover - depende de la red
         return jsonify({"error": f"No se pudo generar el audio: {exc}"}), 502
 
@@ -100,9 +108,12 @@ def hablar():
     )
 
 
-async def _generar_audio(texto: str, voz: str, velocidad: str) -> bytes:
-    """Genera el audio en memoria usando edge-tts y lo devuelve como bytes."""
-    communicate = edge_tts.Communicate(texto, voz, rate=velocidad)
+async def _generar_audio(texto: str, voz: str, velocidad: str, tono: str) -> bytes:
+    """Genera el audio en memoria usando edge-tts y lo devuelve como bytes.
+
+    'tono' baja o sube el tono de la voz (p.ej. "-20Hz" la hace mas grave).
+    """
+    communicate = edge_tts.Communicate(texto, voz, rate=velocidad, pitch=tono)
     buffer = bytearray()
     async for chunk in communicate.stream():
         if chunk["type"] == "audio":

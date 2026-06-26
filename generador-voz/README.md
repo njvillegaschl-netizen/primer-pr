@@ -55,10 +55,18 @@ Para detener la app, vuelve a la terminal y pulsa `Ctrl + C`.
 
 ## 🎙️ Voces disponibles
 
-La app trae varias voces destacadas en español (México, Colombia, España,
-Argentina, EE.UU.). Si quieres ver **todas** las voces disponibles (cientos, en
-muchos idiomas), abre <http://localhost:5000/voces> mientras la app está
-corriendo. Cada voz tiene un identificador como `es-MX-DaliaNeural`.
+La app trae varias voces destacadas en español (México, Colombia, Venezuela,
+Perú, Chile, España, Argentina, EE.UU.). Si quieres ver **todas** las voces
+disponibles (cientos, en muchos idiomas), abre <http://localhost:5000/voces>
+mientras la app está corriendo. Cada voz tiene un identificador como
+`es-MX-DaliaNeural`.
+
+### 🎚️ Control de gravedad (tono)
+
+Además de la velocidad, puedes ajustar el **tono** de la voz con el control
+«Gravedad / tono»: muévelo hacia la izquierda para que suene **más grave**
+(profunda) o hacia la derecha para **más aguda**. Es útil, por ejemplo, para
+darle un tono de narrador más profundo a una voz masculina.
 
 ---
 

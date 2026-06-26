@@ -120,6 +120,13 @@
           </label>
           <input type="range" id="velocidad" min="-50" max="50" step="5" value="0" />
         </div>
+        <div class="campo">
+          <label for="tono">
+            Gravedad / tono: <span class="valor-velocidad" id="valor-tono">0 Hz</span>
+          </label>
+          <input type="range" id="tono" min="-50" max="50" step="5" value="0" />
+          <div class="contador">⟵ más grave&nbsp;&nbsp;·&nbsp;&nbsp;más agudo ⟶</div>
+        </div>
       </div>
 
       <button id="boton">Generar voz</button>
@@ -142,6 +149,8 @@
     const voz = document.getElementById("voz");
     const velocidad = document.getElementById("velocidad");
     const valorVelocidad = document.getElementById("valor-velocidad");
+    const tono = document.getElementById("tono");
+    const valorTono = document.getElementById("valor-tono");
     const boton = document.getElementById("boton");
     const cajaError = document.getElementById("error");
     const resultado = document.getElementById("resultado");
@@ -157,6 +166,11 @@
     velocidad.addEventListener("input", () => {
       const v = parseInt(velocidad.value, 10);
       valorVelocidad.textContent = (v > 0 ? "+" : "") + v + "%";
+    });
+
+    tono.addEventListener("input", () => {
+      const t = parseInt(tono.value, 10);
+      valorTono.textContent = (t > 0 ? "+" : "") + t + " Hz";
     });
 
     function mostrarError(mensaje) {
@@ -179,12 +193,14 @@
 
       const v = parseInt(velocidad.value, 10);
       const rate = (v >= 0 ? "+" : "") + v + "%";
+      const t = parseInt(tono.value, 10);
+      const pitch = (t >= 0 ? "+" : "") + t + "Hz";
 
       try {
         const respuesta = await fetch("/hablar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ texto: contenido, voz: voz.value, velocidad: rate }),
+          body: JSON.stringify({ texto: contenido, voz: voz.value, velocidad: rate, tono: pitch }),
         });
 
         if (!respuesta.ok) {
