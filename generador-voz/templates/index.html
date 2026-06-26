@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de Voz</title>
+  <style>
+    :root {
+      --azul: #4f46e5;
+      --azul-oscuro: #4338ca;
+      --fondo: #f4f5fb;
+      --texto: #1f2430;
+      --gris: #6b7280;
+      --error: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+      line-height: 1.5;
+    }
+    .contenedor {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 4px; }
+    .subtitulo { color: var(--gris); margin-top: 0; }
+    .tarjeta {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+      margin-top: 24px;
+    }
+    label { font-weight: 600; display: block; margin-bottom: 6px; }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .contador { text-align: right; color: var(--gris); font-size: 0.85rem; margin-top: 4px; }
+    .fila { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
+    .campo { flex: 1; min-width: 200px; }
+    select, input[type="range"] { width: 100%; }
+    select {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+    }
+    .valor-velocidad { color: var(--azul); font-weight: 700; }
+    button {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background: var(--azul);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover:not(:disabled) { background: var(--azul-oscuro); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .resultado { margin-top: 24px; }
+    audio { width: 100%; margin-top: 8px; }
+    .descargar {
+      display: inline-block;
+      margin-top: 12px;
+      color: var(--azul);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .descargar:hover { text-decoration: underline; }
+    .error {
+      margin-top: 16px;
+      color: var(--error);
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      padding: 12px;
+      border-radius: 10px;
+    }
+    .oculto { display: none; }
+    .pie { text-align: center; color: var(--gris); font-size: 0.85rem; margin-top: 32px; }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+    <h1>🔊 Generador de Voz</h1>
+    <p class="subtitulo">Convierte tu texto en audio con voces realistas y gratuitas.</p>
+
+    <div class="tarjeta">
+      <label for="texto">Tu texto</label>
+      <textarea id="texto" maxlength="5000" placeholder="Escribe aqui lo que quieres escuchar..."></textarea>
+      <div class="contador"><span id="contador">0</span> / 5000</div>
+
+      <div class="fila">
+        <div class="campo">
+          <label for="voz">Voz</label>
+          <select id="voz">
+            {% for v in voces %}
+            <option value="{{ v.id }}">{{ v.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="campo">
+          <label for="velocidad">
+            Velocidad: <span class="valor-velocidad" id="valor-velocidad">0%</span>
+          </label>
+          <input type="range" id="velocidad" min="-50" max="50" step="5" value="0" />
+        </div>
+      </div>
+
+      <button id="boton">Generar voz</button>
+
+      <div id="error" class="error oculto" role="alert" aria-live="assertive"></div>
+
+      <div id="resultado" class="resultado oculto">
+        <label>Resultado</label>
+        <audio id="audio" controls></audio>
+        <a id="descargar" class="descargar" download="voz.mp3">⬇️ Descargar audio (MP3)</a>
+      </div>
+    </div>
+
+    <p class="pie">Hecho con edge-tts (voces neuronales de Microsoft) — sin costo.</p>
+  </div>
+
+  <script>
+    const texto = document.getElementById("texto");
+    const contador = document.getElementById("contador");
+    const voz = document.getElementById("voz");
+    const velocidad = document.getElementById("velocidad");
+    const valorVelocidad = document.getElementById("valor-velocidad");
+    const boton = document.getElementById("boton");
+    const cajaError = document.getElementById("error");
+    const resultado = document.getElementById("resultado");
+    const audio = document.getElementById("audio");
+    const descargar = document.getElementById("descargar");
+
+    let urlActual = null;
+
+    texto.addEventListener("input", () => {
+      contador.textContent = texto.value.length;
+    });
+
+    velocidad.addEventListener("input", () => {
+      const v = parseInt(velocidad.value, 10);
+      valorVelocidad.textContent = (v > 0 ? "+" : "") + v + "%";
+    });
+
+    function mostrarError(mensaje) {
+      cajaError.textContent = mensaje;
+      cajaError.classList.remove("oculto");
+    }
+
+    boton.addEventListener("click", async () => {
+      cajaError.classList.add("oculto");
+      resultado.classList.add("oculto");
+
+      const contenido = texto.value.trim();
+      if (!contenido) {
+        mostrarError("Escribe algun texto primero.");
+        return;
+      }
+
+      boton.disabled = true;
+      boton.textContent = "Generando...";
+
+      const v = parseInt(velocidad.value, 10);
+      const rate = (v >= 0 ? "+" : "") + v + "%";
+
+      try {
+        const respuesta = await fetch("/hablar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texto: contenido, voz: voz.value, velocidad: rate }),
+        });
+
+        if (!respuesta.ok) {
+          let mensaje = "Ocurrio un error al generar el audio.";
+          try {
+            const datos = await respuesta.json();
+            if (datos.error) mensaje = datos.error;
+          } catch (_) {}
+          mostrarError(mensaje);
+          return;
+        }
+
+        const blob = await respuesta.blob();
+        if (urlActual) URL.revokeObjectURL(urlActual);
+        urlActual = URL.createObjectURL(blob);
+        audio.src = urlActual;
+        descargar.href = urlActual;
+        resultado.classList.remove("oculto");
+        audio.play().catch(() => {});
+      } catch (e) {
+        mostrarError("No se pudo conectar con el servidor. ¿Esta corriendo la app?");
+      } finally {
+        boton.disabled = false;
+        boton.textContent = "Generar voz";
+      }
+    });
+  </script>
+</body>
+</html>
