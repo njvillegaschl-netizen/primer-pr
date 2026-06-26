@@ -1,0 +1,11 @@
+# Entorno virtual de Python
+venv/
+.venv/
+env/
+
+# Archivos generados por Python
+__pycache__/
+*.pyc
+
+# Audios generados al probar
+*.mp3
