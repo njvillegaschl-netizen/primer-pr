@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0a08">
+<title>El Don — Lecciones de El Padrino</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0d0a08;
+    --panel: #1a1410;
+    --card: #211a14;
+    --gold: #c9a227;
+    --gold-dim: #8a7020;
+    --cream: #e8dcc8;
+    --muted: #9c8f7a;
+    --red: #8e2323;
+    --green: #4a7a3a;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: Georgia, 'Times New Roman', serif;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #app {
+    height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ---------- Barra de estadísticas ---------- */
+  #stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 14px 10px 8px;
+    gap: 8px;
+  }
+  .stat { flex: 1; text-align: center; }
+  .stat .icon { font-size: 22px; display: block; }
+  .stat .bar {
+    height: 6px;
+    background: #2e261d;
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  .stat .fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 3px;
+    transition: width .5s ease, background .3s;
+  }
+  .stat.danger .fill { background: var(--red); }
+  .stat .dot {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .stat.preview .dot { opacity: 1; }
+
+  #week {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 6px;
+  }
+
+  /* ---------- Zona de la carta ---------- */
+  #card-zone {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+  }
+
+  #card {
+    width: 100%;
+    max-width: 340px;
+    background: linear-gradient(160deg, #262019 0%, var(--card) 60%, #17120d 100%);
+    border: 1px solid #3a2f22;
+    border-radius: 14px;
+    padding: 26px 22px 30px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.6);
+    text-align: center;
+    cursor: grab;
+    will-change: transform;
+    position: relative;
+  }
+  #card.dragging { transition: none; }
+  #card.returning { transition: transform .3s ease; }
+  #card.leaving { transition: transform .35s ease, opacity .35s ease; opacity: 0; }
+  #card.entering { animation: enter .35s ease; }
+  @keyframes enter {
+    from { transform: translateY(24px) scale(.96); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  #char-icon { font-size: 52px; }
+  #char-name {
+    color: var(--gold);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 10px 0 16px;
+  }
+  #card-text {
+    font-size: 17px;
+    line-height: 1.5;
+    min-height: 100px;
+    font-style: italic;
+  }
+
+  .choice-hint {
+    position: absolute;
+    top: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity .1s;
+    max-width: 45%;
+    text-transform: uppercase;
+  }
+  #hint-left  { left: 12px;  background: rgba(142,35,35,.85); }
+  #hint-right { right: 12px; background: rgba(74,122,58,.85); }
+
+  /* ---------- Botones de elección ---------- */
+  #choices {
+    display: flex;
+    gap: 12px;
+    padding: 0 24px 20px;
+  }
+  .choice-btn {
+    flex: 1;
+    background: var(--panel);
+    color: var(--cream);
+    border: 1px solid #3a2f22;
+    border-radius: 10px;
+    padding: 14px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.3;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .choice-btn:active { background: #2a2119; border-color: var(--gold-dim); }
+
+  /* ---------- Lección (cita) ---------- */
+  #lesson {
+    position: absolute;
+    inset: 0;
+    background: rgba(8,6,4,.94);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    z-index: 20;
+  }
+  #lesson.show { display: flex; }
+  #lesson .label {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  #lesson .quote {
+    font-size: 21px;
+    font-style: italic;
+    line-height: 1.5;
+    max-width: 340px;
+  }
+  #lesson .tap {
+    margin-top: 34px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+
+  /* ---------- Pantallas de inicio / fin ---------- */
+  .screen {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    z-index: 30;
+  }
+  .screen.show { display: flex; }
+  .screen h1 {
+    font-size: 40px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .screen .subtitle {
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 28px;
+    font-size: 15px;
+  }
+  .screen p {
+    max-width: 320px;
+    line-height: 1.6;
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  .screen .quote {
+    font-style: italic;
+    color: var(--gold);
+    margin: 18px 0;
+    font-size: 17px;
+    line-height: 1.5;
+    max-width: 320px;
+  }
+  .big-btn {
+    margin-top: 26px;
+    background: var(--gold);
+    color: #1a1208;
+    border: none;
+    border-radius: 10px;
+    padding: 15px 44px;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+  .big-btn:active { background: #a9861f; }
+  .legend { font-size: 13px; color: var(--muted); line-height: 2; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="stats">
+    <div class="stat" data-stat="respeto">
+      <span class="icon">🤝</span>
+      <div class="bar"><span class="dot">●</span><div class="fill"></div></div>
+    </div>
+    <div class="stat" data-stat="familia">
+      <span class="icon">👪</span>
+      <div class="bar"><span class="dot">●</span><div class="fill"></div></div>
+    </div>
+    <div class="stat" data-stat="dinero">
+      <span class="icon">💰</span>
+      <div class="bar"><span class="dot">●</span><div class="fill"></div></div>
+    </div>
+    <div class="stat" data-stat="discrecion">
+      <span class="icon">🤫</span>
+      <div class="bar"><span class="dot">●</span><div class="fill"></div></div>
+    </div>
+  </div>
+  <div id="week">Semana 1 al mando</div>
+
+  <div id="card-zone">
+    <div id="card">
+      <div class="choice-hint" id="hint-left"></div>
+      <div class="choice-hint" id="hint-right"></div>
+      <div id="char-icon">🎩</div>
+      <div id="char-name">Consigliere</div>
+      <div id="card-text"></div>
+    </div>
+  </div>
+
+  <div id="choices">
+    <button class="choice-btn" id="btn-left"></button>
+    <button class="choice-btn" id="btn-right"></button>
+  </div>
+
+  <div id="lesson">
+    <div class="label">Lección del Padrino</div>
+    <div class="quote" id="lesson-quote"></div>
+    <div class="tap">Toca para continuar</div>
+  </div>
+
+  <div class="screen show" id="screen-start">
+    <h1>EL DON</h1>
+    <div class="subtitle">Lecciones de El Padrino</div>
+    <p>Eres el nuevo jefe de la familia. Cada semana alguien vendrá a pedirte una decisión.</p>
+    <p class="legend">
+      🤝 Respeto &nbsp; 👪 Familia<br>
+      💰 Dinero &nbsp; 🤫 Discreción
+    </p>
+    <p>Mantén el equilibrio: si algo cae a cero o se desborda, tu reinado termina. Desliza la carta o usa los botones.</p>
+    <div class="quote">"Le haré una oferta que no podrá rechazar."</div>
+    <button class="big-btn" id="btn-start">Tomar el mando</button>
+  </div>
+
+  <div class="screen" id="screen-over">
+    <h1 id="over-title">FIN</h1>
+    <div class="subtitle" id="over-weeks"></div>
+    <p id="over-reason"></p>
+    <div class="quote" id="over-quote"></div>
+    <button class="big-btn" id="btn-restart">Volver a intentarlo</button>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ---------- Cartas: cada elección enseña una lección de El Padrino ----------
+// Efectos: respeto, familia, dinero, discrecion (positivo o negativo).
+const CARDS = [
+  {
+    char: '🎩', name: 'Tom, tu consigliere',
+    text: 'El dueño del estudio no quiere darle el papel a nuestro ahijado. ¿Lo presionamos?',
+    left:  { label: 'Enviar un mensaje que no olvide', fx: { respeto: 12, discrecion: -14 },
+             lesson: '"Le haré una oferta que no podrá rechazar." El poder real convence sin disparar.' },
+    right: { label: 'Negociar con calma primero', fx: { respeto: 4, dinero: 5, discrecion: 4 },
+             lesson: '"Nunca te enojes. Nunca amenaces. Razona con la gente." — Don Corleone' }
+  },
+  {
+    char: '💼', name: 'Sollozzo, el Turco',
+    text: 'Un socio ofrece entrar al negocio de los narcóticos. Deja mucho dinero, pero mancha el nombre.',
+    left:  { label: 'Aceptar el negocio', fx: { dinero: 18, respeto: -10, discrecion: -12 },
+             lesson: 'El dinero rápido atrae enemigos rápidos. El Don rechazó los narcóticos para proteger sus alianzas políticas.' },
+    right: { label: 'Rechazar con cortesía', fx: { dinero: -6, respeto: 8, discrecion: 6 },
+             lesson: '"Es cierto, tengo muchos amigos en la política. Pero dejarían de serlo si mi negocio fueran las drogas."' }
+  },
+  {
+    char: '😢', name: 'Bonasera, el enterrador',
+    text: 'Un hombre te pide justicia para su hija, pero nunca ha querido tu amistad. Hoy te necesita.',
+    left:  { label: 'Ayudarlo a cambio de lealtad futura', fx: { respeto: 10, familia: 4, dinero: -4 },
+             lesson: '"Algún día, y quizá ese día nunca llegue, te pediré un favor." Los favores valen más que el dinero.' },
+    right: { label: 'Cobrarle en efectivo', fx: { dinero: 10, respeto: -10 },
+             lesson: 'Quien cobra cada favor se vuelve un comerciante. Quien regala favores se vuelve un Don.' }
+  },
+  {
+    char: '🔥', name: 'Sonny, tu hermano',
+    text: 'Insultaron a la familia en público. Sonny quiere responder hoy mismo, con todo.',
+    left:  { label: 'Dejar que Sonny actúe ya', fx: { respeto: 8, familia: -8, discrecion: -14 },
+             lesson: '"Nunca dejes que nadie fuera de la familia sepa lo que estás pensando." La furia de Sonny lo llevó a la emboscada.' },
+    right: { label: 'Esperar el momento justo', fx: { respeto: -4, discrecion: 10 },
+             lesson: 'La venganza es un plato que se sirve frío. Quien espera, elige el terreno.' }
+  },
+  {
+    char: '👔', name: 'Un capo rival',
+    text: 'Te invita a una reunión de paz entre las familias. Podría ser sincera... o una trampa.',
+    left:  { label: 'Asistir y escuchar', fx: { respeto: 6, discrecion: 8, familia: -4 },
+             lesson: '"Mantén cerca a tus amigos, pero más cerca a tus enemigos." — Michael Corleone' },
+    right: { label: 'Rechazar la invitación', fx: { respeto: -8, discrecion: -4 },
+             lesson: 'Quien no se sienta a la mesa no sabe qué se cocina en ella.' }
+  },
+  {
+    char: '👶', name: 'Kay, tu esposa',
+    text: 'Es el bautizo de tu sobrino, pero hay un negocio urgente esa misma tarde.',
+    left:  { label: 'Ir al bautizo', fx: { familia: 12, dinero: -6 },
+             lesson: '"Un hombre que no pasa tiempo con su familia nunca podrá ser un hombre de verdad." — Don Corleone' },
+    right: { label: 'Atender el negocio', fx: { dinero: 10, familia: -12 },
+             lesson: 'Puedes recuperar el dinero perdido. El tiempo con la familia no vuelve.' }
+  },
+  {
+    char: '⚖️', name: 'Tu abogado',
+    text: 'Hay dos formas de quedarte con el puerto: cien hombres armados o un buen contrato.',
+    left:  { label: 'Mandar a los muchachos', fx: { respeto: 6, discrecion: -16 },
+             lesson: '"Un abogado con su maletín puede robar más que cien hombres con pistolas." La fuerza es el último recurso.' },
+    right: { label: 'Firmar el contrato', fx: { dinero: 12, discrecion: 6, respeto: -3 },
+             lesson: 'El crimen perfecto es el que parece un negocio legal.' }
+  },
+  {
+    char: '🐀', name: 'Clemenza',
+    text: 'Descubrimos que Paulie, tu chofer, vendió información. Todos esperan tu reacción.',
+    left:  { label: 'Castigo discreto y definitivo', fx: { respeto: 10, familia: -4, discrecion: -6 },
+             lesson: '"Deja el arma. Trae los cannoli." Los asuntos feos se resuelven sin ruido y la vida sigue.' },
+    right: { label: 'Perdonarlo con advertencia', fx: { familia: 5, respeto: -12 },
+             lesson: 'La traición perdonada barata se repite cara. El respeto se sostiene con consecuencias.' }
+  },
+  {
+    char: '🎰', name: 'Moe Greene',
+    text: 'Un socio en Las Vegas te falta el respeto delante de todos: "¡Yo hice mi imperio solo!"',
+    left:  { label: 'Responder la ofensa en el acto', fx: { respeto: 8, discrecion: -10, familia: -3 },
+             lesson: 'Nunca humilles a un hombre en público si no estás dispuesto a terminar lo que empiezas.' },
+    right: { label: 'Sonreír y tomar nota', fx: { discrecion: 8, respeto: -4 },
+             lesson: '"No es personal, Sonny. Son estrictamente negocios." Las cuentas se cobran con la cabeza fría.' }
+  },
+  {
+    char: '🕊️', name: 'El Don retirado',
+    text: 'Tu padre, ya viejo, te advierte: "El que venga a ofrecerte la reunión con Barzini... ese es el traidor."',
+    left:  { label: 'Escuchar al viejo', fx: { discrecion: 10, familia: 6 },
+             lesson: 'La experiencia de los mayores es un mapa de las trampas del camino. Escúchala.' },
+    right: { label: 'Confiar en tu instinto', fx: { respeto: 4, discrecion: -8 },
+             lesson: '"Los grandes hombres no nacen grandes: crecen grandes." Y crecen escuchando antes de decidir.' }
+  },
+  {
+    char: '💒', name: 'Connie, tu hermana',
+    text: 'Es la boda de Connie. La tradición dice que un siciliano no puede negar favores el día de la boda de su hija.',
+    left:  { label: 'Recibir a todos los que pidan', fx: { respeto: 10, familia: 8, dinero: -8 },
+             lesson: 'La generosidad en el momento justo compra lealtades que el miedo jamás conseguirá.' },
+    right: { label: 'Limitar las audiencias', fx: { dinero: 4, respeto: -8, familia: -4 },
+             lesson: 'Un Don que rompe la tradición debilita aquello que lo hace Don.' }
+  },
+  {
+    char: '🚓', name: 'Un capitán de policía',
+    text: 'Un capitán corrupto pide el doble de lo acordado para mirar hacia otro lado.',
+    left:  { label: 'Pagarle sin discutir', fx: { dinero: -12, discrecion: 10 },
+             lesson: 'La paz con la ley es cara, pero la guerra con la ley es la ruina. Elige tus batallas.' },
+    right: { label: 'Negarte y buscarle un reemplazo', fx: { dinero: 4, respeto: 6, discrecion: -12 },
+             lesson: 'Nunca dependas de un solo hombre corrupto: cultiva alternativas antes de romper con él.' }
+  },
+  {
+    char: '🇮🇹', name: 'Un paisano recién llegado',
+    text: 'Un inmigrante sin trabajo pide tu protección. No tiene nada que ofrecerte hoy.',
+    left:  { label: 'Darle trabajo y protección', fx: { familia: 8, respeto: 6, dinero: -5 },
+             lesson: 'El Don construyó su imperio protegiendo a quienes nadie protegía. La lealtad nace de la gratitud.' },
+    right: { label: 'Decirle que vuelva cuando prospere', fx: { dinero: 3, respeto: -8 },
+             lesson: 'Quien solo ayuda a los fuertes tendrá aliados solo mientras sea fuerte.' }
+  },
+  {
+    char: '🤵', name: 'Luca Brasi',
+    text: 'Tu hombre más temido quiere demostrar su lealtad con una misión peligrosa entre los rivales.',
+    left:  { label: 'Enviarlo a infiltrarse', fx: { discrecion: 6, respeto: 4, familia: -8 },
+             lesson: 'Hasta el más fuerte puede caer. No gastes a tus mejores hombres en apuestas.' },
+    right: { label: 'Mantenerlo a tu lado', fx: { familia: 6, discrecion: -4 },
+             lesson: 'Un guardaespaldas leal cerca vale más que un espía lejos.' }
+  },
+  {
+    char: '📰', name: 'Un periodista',
+    text: 'Un periodista prepara un artículo sobre "la familia". Puedes comprarlo o ignorarlo.',
+    left:  { label: 'Comprar su pluma', fx: { dinero: -10, discrecion: 12 },
+             lesson: 'Es mejor tener amigos en los periódicos que abogados en los tribunales.' },
+    right: { label: 'Ignorarlo, que escriba', fx: { dinero: 4, discrecion: -10 },
+             lesson: 'Lo que se publica no se puede despublicar. La reputación se cuida antes, no después.' }
+  },
+  {
+    char: '🍝', name: 'Mamá Corleone',
+    text: 'Domingo de pasta en casa de mamá. Los capos esperan tu decisión sobre un territorio ese mismo día.',
+    left:  { label: 'Primero la mesa de mamá', fx: { familia: 10, respeto: 3, dinero: -3 },
+             lesson: 'En la mesa familiar no se habla de negocios. Ahí se recuerda por qué se hacen.' },
+    right: { label: 'Primero el territorio', fx: { dinero: 8, familia: -10 },
+             lesson: 'Un imperio sin domingos en familia es solo una empresa con enemigos.' }
+  },
+  {
+    char: '🎭', name: 'Fredo, tu hermano débil',
+    text: 'Fredo cerró un trato a tus espaldas con gente de Roth. Dice que solo quería "ser alguien".',
+    left:  { label: 'Apartarlo de la familia', fx: { respeto: 8, familia: -14 },
+             lesson: '"Sé que fuiste tú, Fredo. Me rompiste el corazón." La traición dentro de casa es la herida más profunda.' },
+    right: { label: 'Perdonarlo y vigilarlo', fx: { familia: 8, respeto: -6, discrecion: -4 },
+             lesson: '"Nunca te pongas del lado de nadie contra la familia." Pero un Don también sabe cuándo la sangre pesa más.' }
+  },
+  {
+    char: '🗳️', name: 'Un senador',
+    text: 'Un senador te desprecia en privado pero necesita tu dinero para su campaña.',
+    left:  { label: 'Financiarlo y guardar el recibo', fx: { dinero: -10, discrecion: 8, respeto: 6 },
+             lesson: 'Los políticos son como los paraguas: se compran antes de la tormenta.' },
+    right: { label: 'Humillarlo y negarte', fx: { respeto: 4, discrecion: -10 },
+             lesson: '"Nunca odies a tus enemigos: afecta tu juicio." — Michael Corleone' }
+  },
+  {
+    char: '⚰️', name: 'Tessio',
+    text: 'Un viejo amigo te propone la reunión que tu padre te advirtió. Es él: el traidor es Tessio.',
+    left:  { label: 'Actuar en silencio y de una vez', fx: { respeto: 12, familia: -6, discrecion: -6 },
+             lesson: 'El día del ajuste de cuentas, Michael resolvió todo a la vez. Los problemas se cierran completos, no a medias.' },
+    right: { label: 'Confrontarlo y dejarlo ir', fx: { familia: 4, respeto: -12 },
+             lesson: 'Un traidor libre es una semilla de la próxima guerra.' }
+  },
+  {
+    char: '🏦', name: 'Hyman Roth',
+    text: 'Un viejo zorro te ofrece una sociedad enorme en Cuba. "Somos más grandes que la acero", dice.',
+    left:  { label: 'Invertir con él', fx: { dinero: 16, discrecion: -8, familia: -4 },
+             lesson: '"Mantén cerca a tus enemigos." Roth sonreía mientras preparaba la traición. Desconfía de los socios demasiado dulces.' },
+    right: { label: 'Investigarlo antes de firmar', fx: { dinero: -4, discrecion: 8 },
+             lesson: 'El que tiene paciencia para investigar no necesita suerte para sobrevivir.' }
+  },
+  {
+    char: '🔫', name: 'Michael, en la trattoria',
+    text: 'Tienen al culpable del atentado contra tu padre a tu alcance, en un restaurante. Una sola oportunidad.',
+    left:  { label: 'Tomar la oportunidad', fx: { respeto: 14, familia: 4, discrecion: -16 },
+             lesson: 'Cuando Michael cruzó esa línea, no hubo regreso. Toda decisión definitiva cobra un precio definitivo.' },
+    right: { label: 'Buscar otro camino', fx: { discrecion: 8, respeto: -10 },
+             lesson: 'A veces retirarse es sabiduría. Pero el que duda frente al lobo, alimenta al lobo.' }
+  },
+  {
+    char: '🍊', name: 'El puesto de naranjas',
+    text: 'Te sientes vigilado al hacer tus compras de siempre. Cambiar de rutina o mostrar normalidad.',
+    left:  { label: 'Cambiar todas tus rutinas', fx: { discrecion: 10, familia: -4 },
+             lesson: 'Al Don le dispararon comprando naranjas: la rutina es el mapa que le regalas a tu enemigo.' },
+    right: { label: 'Mostrar que no tienes miedo', fx: { respeto: 8, discrecion: -10 },
+             lesson: 'El valor sin prudencia es solo una forma lenta de rendirse.' }
+  },
+  {
+    char: '🎓', name: 'Tu hijo menor',
+    text: 'Tu hijo quiere entrar al negocio familiar. Tú soñabas con verlo senador, lejos de todo esto.',
+    left:  { label: 'Dejarlo entrar', fx: { familia: 6, respeto: 4, discrecion: -6 },
+             lesson: '"Nunca quise esto para ti." Cada Don sueña con que su hijo no necesite serlo.' },
+    right: { label: 'Mandarlo a la universidad', fx: { familia: -6, discrecion: 6 },
+             lesson: 'El mejor legado no es el trono: es no necesitarlo. El poder legítimo es el plan final de la familia.' }
+  },
+  {
+    char: '🤝', name: 'Las Cinco Familias',
+    text: 'Tras años de guerra, puedes proponer la paz. Tendrás que jurar no vengar la sangre derramada.',
+    left:  { label: 'Hacer la paz y jurar', fx: { discrecion: 12, familia: 6, respeto: -6 },
+             lesson: '"Renuncio a la venganza por el bien de todos." El Don sacrificó su orgullo para traer a Michael a casa. Saber ceder también es poder.' },
+    right: { label: 'Continuar la guerra', fx: { respeto: 8, discrecion: -12, familia: -6 },
+             lesson: 'Las guerras cuestan dinero y las ganan los que saben terminarlas.' }
+  }
+];
+
+// ---------- Mensajes de fin de juego por estadística ----------
+const ENDINGS = {
+  respeto: {
+    low:  { r: 'Nadie te teme ni te respeta. Las otras familias se repartieron tu territorio sin disparar un tiro.',
+            q: '"Un hombre sin respeto no es un hombre: es una silla vacía en la mesa."' },
+    high: { r: 'Te volviste tan temido que las Cinco Familias se unieron con un único propósito: eliminarte.',
+            q: '"Mantén cerca a tus amigos... pero tú te quedaste sin amigos que mantener."' }
+  },
+  familia: {
+    low:  { r: 'Ganaste territorios y perdiste tu casa. Solo, en el jardín, nadie vino a sentarse contigo.',
+            q: '"Un hombre que no pasa tiempo con su familia nunca podrá ser un hombre de verdad."' },
+    high: { r: 'Perdonaste todo a todos. Tu propia sangre te vendió sabiendo que jamás habría consecuencias.',
+            q: '"El afecto sin autoridad cría traidores en la propia mesa."' }
+  },
+  dinero: {
+    low:  { r: 'Las arcas quedaron vacías. Sin dinero no hay soldados, sin soldados no hay familia.',
+            q: '"Los favores mueven el mundo, pero la nómina se paga en efectivo."' },
+    high: { r: 'Acumulaste tanto que saliste en los periódicos. El fisco logró lo que ningún rival pudo.',
+            q: '"A Capone no lo atraparon las balas: lo atraparon los libros contables."' }
+  },
+  discrecion: {
+    low:  { r: 'Demasiado ruido, demasiados titulares. La comisión federal tocó tu puerta al amanecer.',
+            q: '"Nunca dejes que nadie fuera de la familia sepa lo que estás pensando."' },
+    high: { r: 'Te escondiste tanto que desapareciste. Tus capos juraron lealtad a alguien que sí daba la cara.',
+            q: '"El poder que nadie ve, para el mundo no existe."' }
+  }
+};
+
+// ---------- Estado ----------
+const state = { stats: {}, week: 1, deck: [], current: null };
+
+const $ = id => document.getElementById(id);
+const card = $('card');
+const statEls = {};
+document.querySelectorAll('.stat').forEach(el => statEls[el.dataset.stat] = el);
+
+function resetGame() {
+  state.stats = { respeto: 50, familia: 50, dinero: 50, discrecion: 50 };
+  state.week = 1;
+  state.deck = [];
+  renderStats();
+  nextCard();
+}
+
+function shuffledDeck() {
+  const d = CARDS.slice();
+  for (let i = d.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [d[i], d[j]] = [d[j], d[i]];
+  }
+  return d;
+}
+
+function nextCard() {
+  if (state.deck.length === 0) state.deck = shuffledDeck();
+  state.current = state.deck.pop();
+  const c = state.current;
+  $('char-icon').textContent = c.char;
+  $('char-name').textContent = c.name;
+  $('card-text').textContent = c.text;
+  $('hint-left').textContent = c.left.label;
+  $('hint-right').textContent = c.right.label;
+  $('btn-left').textContent = c.left.label;
+  $('btn-right').textContent = c.right.label;
+  $('week').textContent = 'Semana ' + state.week + ' al mando';
+  card.style.transform = '';
+  card.classList.remove('leaving');
+  card.classList.add('entering');
+  setTimeout(() => card.classList.remove('entering'), 380);
+}
+
+function renderStats() {
+  for (const k in state.stats) {
+    const v = state.stats[k];
+    const el = statEls[k];
+    el.querySelector('.fill').style.width = v + '%';
+    el.classList.toggle('danger', v <= 15 || v >= 85);
+  }
+}
+
+function previewChoice(choice) {
+  for (const k in statEls) statEls[k].classList.remove('preview');
+  if (!choice || !state.current) return;
+  const fx = state.current[choice].fx;
+  for (const k in fx) statEls[k].classList.add('preview');
+}
+
+function applyChoice(side) {
+  const choice = state.current[side];
+  for (const k in choice.fx) {
+    state.stats[k] = Math.max(0, Math.min(100, state.stats[k] + choice.fx[k]));
+  }
+  renderStats();
+  previewChoice(null);
+
+  // Salida animada de la carta
+  const dir = side === 'left' ? -1 : 1;
+  card.classList.add('leaving');
+  card.style.transform = 'translateX(' + (dir * 420) + 'px) rotate(' + (dir * 24) + 'deg)';
+
+  setTimeout(() => {
+    showLesson(choice.lesson, () => {
+      const dead = checkGameOver();
+      if (dead) { endGame(dead); return; }
+      state.week++;
+      nextCard();
+    });
+  }, 300);
+}
+
+function checkGameOver() {
+  for (const k in state.stats) {
+    if (state.stats[k] <= 0)  return { stat: k, side: 'low' };
+    if (state.stats[k] >= 100) return { stat: k, side: 'high' };
+  }
+  return null;
+}
+
+function showLesson(text, onDone) {
+  $('lesson-quote').textContent = text;
+  const el = $('lesson');
+  el.classList.add('show');
+  const close = () => {
+    el.classList.remove('show');
+    el.removeEventListener('pointerdown', close);
+    onDone();
+  };
+  // Pequeño retraso para no cerrar con el mismo toque que eligió la carta
+  setTimeout(() => el.addEventListener('pointerdown', close), 350);
+}
+
+function endGame(dead) {
+  const e = ENDINGS[dead.stat][dead.side];
+  $('over-title').textContent = 'FIN DEL REINADO';
+  $('over-weeks').textContent = 'Sobreviviste ' + state.week + (state.week === 1 ? ' semana' : ' semanas') + ' al mando';
+  $('over-reason').textContent = e.r;
+  $('over-quote').textContent = e.q;
+  $('screen-over').classList.add('show');
+}
+
+// ---------- Arrastre de la carta (táctil y mouse) ----------
+let drag = null;
+const THRESHOLD = 80;
+
+card.addEventListener('pointerdown', e => {
+  if ($('lesson').classList.contains('show')) return;
+  drag = { x0: e.clientX, dx: 0 };
+  card.classList.add('dragging');
+  card.classList.remove('returning');
+  card.setPointerCapture(e.pointerId);
+});
+
+card.addEventListener('pointermove', e => {
+  if (!drag) return;
+  drag.dx = e.clientX - drag.x0;
+  const rot = drag.dx / 18;
+  card.style.transform = 'translateX(' + drag.dx + 'px) rotate(' + rot + 'deg)';
+  const abs = Math.abs(drag.dx);
+  $('hint-left').style.opacity  = drag.dx < -30 ? Math.min(1, abs / THRESHOLD) : 0;
+  $('hint-right').style.opacity = drag.dx >  30 ? Math.min(1, abs / THRESHOLD) : 0;
+  previewChoice(abs > 30 ? (drag.dx < 0 ? 'left' : 'right') : null);
+});
+
+function endDrag() {
+  if (!drag) return;
+  const dx = drag.dx;
+  drag = null;
+  card.classList.remove('dragging');
+  $('hint-left').style.opacity = 0;
+  $('hint-right').style.opacity = 0;
+  if (dx < -THRESHOLD) { applyChoice('left'); return; }
+  if (dx >  THRESHOLD) { applyChoice('right'); return; }
+  previewChoice(null);
+  card.classList.add('returning');
+  card.style.transform = '';
+  setTimeout(() => card.classList.remove('returning'), 320);
+}
+
+card.addEventListener('pointerup', endDrag);
+card.addEventListener('pointercancel', endDrag);
+
+// ---------- Botones ----------
+$('btn-left').addEventListener('pointerenter', () => previewChoice('left'));
+$('btn-left').addEventListener('pointerleave', () => previewChoice(null));
+$('btn-right').addEventListener('pointerenter', () => previewChoice('right'));
+$('btn-right').addEventListener('pointerleave', () => previewChoice(null));
+$('btn-left').addEventListener('click', () => { if (!$('lesson').classList.contains('show')) applyChoice('left'); });
+$('btn-right').addEventListener('click', () => { if (!$('lesson').classList.contains('show')) applyChoice('right'); });
+
+$('btn-start').addEventListener('click', () => {
+  $('screen-start').classList.remove('show');
+  resetGame();
+});
+$('btn-restart').addEventListener('click', () => {
+  $('screen-over').classList.remove('show');
+  resetGame();
+});
+</script>
+</body>
+</html>
