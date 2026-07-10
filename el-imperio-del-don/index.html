@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0a08">
+<title>El Imperio del Don — Juego de Fusiones</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0d0a08;
+    --panel: #1a1410;
+    --cell: #211a14;
+    --cell-border: #3a2f22;
+    --gold: #c9a227;
+    --gold-dim: #8a7020;
+    --cream: #e8dcc8;
+    --muted: #9c8f7a;
+    --red: #8e2323;
+    --green: #4a7a3a;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: Georgia, 'Times New Roman', serif;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #app {
+    height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    position: relative;
+  }
+
+  /* ---------- Cabecera ---------- */
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 8px;
+  }
+  #level-badge {
+    background: var(--panel);
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  #xp-wrap { flex: 1; }
+  #xp-bar {
+    height: 8px;
+    background: #2e261d;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  #xp-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--gold);
+    border-radius: 4px;
+    transition: width .4s;
+  }
+  #coins {
+    background: var(--panel);
+    border: 1px solid var(--cell-border);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 14px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Misión actual ---------- */
+  #quest {
+    background: linear-gradient(160deg, #262019, var(--panel));
+    border: 1px solid var(--cell-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #quest-icon { font-size: 34px; }
+  #quest-body { flex: 1; min-width: 0; }
+  #quest-name {
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  #quest-text { font-size: 13px; line-height: 1.35; margin: 2px 0 6px; font-style: italic; }
+  #quest-reqs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .req {
+    background: var(--cell);
+    border: 1px solid var(--cell-border);
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .req.ok { border-color: var(--green); }
+  .req .count { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .req.ok .count { color: #8fbf7f; }
+  #quest-deliver {
+    background: var(--gold);
+    color: #1a1208;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 13px;
+    padding: 10px 12px;
+    cursor: pointer;
+    opacity: .35;
+  }
+  #quest-deliver.ready { opacity: 1; animation: glow 1.4s infinite; }
+  @keyframes glow {
+    0%,100% { box-shadow: 0 0 0 rgba(201,162,39,0); }
+    50% { box-shadow: 0 0 14px rgba(201,162,39,.7); }
+  }
+
+  /* ---------- Tablero ---------- */
+  #board-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .cell {
+    aspect-ratio: 1;
+    background: var(--cell);
+    border: 1px solid var(--cell-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+  }
+  .cell.selected { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,162,39,.5); }
+  .cell.fog {
+    background: #14100c;
+    border-style: dashed;
+    color: var(--muted);
+  }
+  .cell .icon { font-size: 26px; line-height: 1; }
+  .cell .tier {
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: var(--gold);
+    margin-top: 3px;
+    height: 8px;
+  }
+  .cell .charges {
+    position: absolute;
+    top: 2px;
+    right: 5px;
+    font-size: 10px;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+  .cell .fog-price { font-size: 10px; margin-top: 3px; }
+  .cell.gen { background: linear-gradient(160deg, #2c2318, var(--cell)); border-color: var(--gold-dim); }
+  .cell .pop { animation: pop .25s ease; }
+  @keyframes pop {
+    from { transform: scale(.4); }
+    60%  { transform: scale(1.25); }
+    to   { transform: scale(1); }
+  }
+
+  /* ---------- Fantasma de arrastre ---------- */
+  #ghost {
+    position: fixed;
+    pointer-events: none;
+    font-size: 32px;
+    z-index: 50;
+    transform: translate(-50%, -60%);
+    display: none;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.7));
+  }
+
+  /* ---------- Panel de información ---------- */
+  #info {
+    min-height: 58px;
+    background: var(--panel);
+    border: 1px solid var(--cell-border);
+    border-radius: 12px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  #info .hint { color: var(--muted); font-style: italic; line-height: 1.3; }
+  #info-icon { font-size: 28px; }
+  #info-body { flex: 1; line-height: 1.3; }
+  #info-name { color: var(--gold); }
+  #info-sub { color: var(--muted); font-size: 12px; }
+  .action-btn {
+    background: var(--cell);
+    color: var(--cream);
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .action-btn:active { background: #2a2119; }
+
+  /* ---------- Toast ---------- */
+  #toast {
+    position: absolute;
+    bottom: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20,15,10,.95);
+    border: 1px solid var(--gold-dim);
+    color: var(--cream);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity .25s;
+    pointer-events: none;
+    z-index: 60;
+    max-width: 85%;
+    text-align: center;
+  }
+  #toast.show { opacity: 1; }
+
+  /* ---------- Lección / pantallas ---------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8,6,4,.95);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    z-index: 100;
+  }
+  .overlay.show { display: flex; }
+  .overlay .label {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .overlay h1 { font-size: 34px; color: var(--gold); margin-bottom: 8px; letter-spacing: 1px; }
+  .overlay .quote {
+    font-size: 19px;
+    font-style: italic;
+    line-height: 1.5;
+    max-width: 330px;
+  }
+  .overlay .reward { margin-top: 18px; font-size: 15px; color: var(--gold); }
+  .overlay p { max-width: 320px; line-height: 1.6; font-size: 15px; margin: 8px 0; }
+  .overlay .tap {
+    margin-top: 30px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+  .big-btn {
+    margin-top: 26px;
+    background: var(--gold);
+    color: #1a1208;
+    border: none;
+    border-radius: 10px;
+    padding: 15px 44px;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .legend { font-size: 13px; color: var(--muted); line-height: 2; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="header">
+    <div id="level-badge">Nivel 1</div>
+    <div id="xp-wrap"><div id="xp-bar"><div id="xp-fill"></div></div></div>
+    <div id="coins">🪙 0</div>
+  </div>
+
+  <div id="quest">
+    <div id="quest-icon">😢</div>
+    <div id="quest-body">
+      <div id="quest-name"></div>
+      <div id="quest-text"></div>
+      <div id="quest-reqs"></div>
+    </div>
+    <button id="quest-deliver">Cumplir</button>
+  </div>
+
+  <div id="board-wrap"><div id="board"></div></div>
+
+  <div id="info"><span class="hint">Toca un productor para generar objetos. Arrastra dos objetos iguales para fusionarlos.</span></div>
+
+  <div id="ghost"></div>
+  <div id="toast"></div>
+
+  <div class="overlay" id="lesson">
+    <div class="label">Lección del Padrino</div>
+    <div class="quote" id="lesson-quote"></div>
+    <div class="reward" id="lesson-reward"></div>
+    <div class="tap">Toca para continuar</div>
+  </div>
+
+  <div class="overlay show" id="screen-start">
+    <h1>EL IMPERIO DEL DON</h1>
+    <div class="label">Un juego de fusiones</div>
+    <p>Construye el imperio de la familia: toca los productores 🫒 y 👨‍🍳 para generar objetos, y <b>arrastra dos iguales</b> para fusionarlos en algo mejor.</p>
+    <p class="legend">
+      🪙 Dinero &nbsp; 🍊 Negocios<br>
+      🧢 Familia &nbsp; ✉️ Favores
+    </p>
+    <p>Cumple los encargos de los personajes, aprende sus lecciones y expande tu territorio comprando las zonas en niebla.</p>
+    <button class="big-btn" id="btn-start">Abrir el negocio</button>
+  </div>
+
+  <div class="overlay" id="screen-win">
+    <h1>ERES EL NUEVO DON</h1>
+    <div class="label" id="win-sub">El imperio está completo</div>
+    <div class="quote">"Los grandes hombres no nacen grandes: crecen grandes."</div>
+    <p>Completaste todos los encargos de la familia. El tablero queda abierto para que sigas fusionando tu imperio.</p>
+    <button class="big-btn" id="btn-continue">Seguir jugando</button>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ================== Datos ==================
+const COLS = 6, ROWS = 7, CELLS = COLS * ROWS;
+const SAVE_KEY = 'elImperioDelDon-v1';
+
+const CHAINS = {
+  dinero:  { icons: ['🪙','💵','💰','💼','🏦'], names: ['Moneda','Fajo de billetes','Bolsa de dinero','Maletín','Bóveda'] },
+  negocio: { icons: ['🍊','🏪','🍝','🎷','🎰'], names: ['Puesto de fruta','Colmado','Trattoria','Club de jazz','Casino'] },
+  familia: { icons: ['🧢','🕴️','🎩','🤵','👪'], names: ['Recluta','Soldado','Capo','Consigliere','La Familia'] },
+  favor:   { icons: ['✉️','🤝','📜','🕊️','🗝️'], names: ['Carta','Favor','Pacto','Alianza','Influencia'] }
+};
+const MAX_TIER = 5;
+const SELL_PRICE = [0, 2, 6, 18, 50, 140]; // por nivel (índice = tier)
+
+const GENERATORS = {
+  genco:   { icon: '🫒', name: 'Genco Olive Oil',    pool: ['dinero','favor'],   max: 8, regenMs: 8000 },
+  cocina:  { icon: '👨‍🍳', name: 'Cocina de Clemenza', pool: ['negocio','familia'], max: 8, regenMs: 8000 }
+};
+
+// Misiones: personaje, texto, requisitos, recompensa y lección del Padrino
+const QUESTS = [
+  { icon: '😢', name: 'Bonasera, el enterrador',
+    text: 'Creí en América... pero hoy necesito tu ayuda. Acepta mis cartas de respeto.',
+    reqs: [{ chain: 'favor', tier: 1, count: 2 }], coins: 20, xp: 15,
+    lesson: '"Algún día, y quizá ese día nunca llegue, te pediré un favor." Los favores valen más que el dinero.' },
+  { icon: '🍝', name: 'Clemenza',
+    text: 'Necesito un soldado de confianza para el trabajo del martes.',
+    reqs: [{ chain: 'familia', tier: 2, count: 1 }], coins: 25, xp: 20,
+    lesson: '"Deja el arma. Trae los cannoli." Los asuntos feos se resuelven sin ruido y la vida sigue.' },
+  { icon: '⚖️', name: 'Tom Hagen',
+    text: 'Con un buen fajo arreglo en el juzgado lo que cien hombres no arreglan en la calle.',
+    reqs: [{ chain: 'dinero', tier: 2, count: 1 }], coins: 30, xp: 20,
+    lesson: '"Un abogado con su maletín puede robar más que cien hombres con pistolas."' },
+  { icon: '💒', name: 'La boda de Connie',
+    text: 'Es la boda de mi hija. Hoy no se le niega ningún favor a nadie.',
+    reqs: [{ chain: 'favor', tier: 2, count: 1 }, { chain: 'dinero', tier: 1, count: 2 }], coins: 40, xp: 30,
+    lesson: 'Ningún siciliano puede negar un favor el día de la boda de su hija. La generosidad compra lealtades que el miedo no consigue.' },
+  { icon: '🫒', name: 'Genco Abbandando',
+    text: 'El aceite de oliva es la mejor fachada. Consígueme un colmado donde venderlo.',
+    reqs: [{ chain: 'negocio', tier: 2, count: 1 }], coins: 45, xp: 30,
+    lesson: 'Todo imperio necesita un negocio legítimo a la vista. El crimen perfecto parece un negocio legal.' },
+  { icon: '🤵', name: 'Luca Brasi',
+    text: 'Don, déjeme entrenar a dos soldados más. La paz es el mejor momento para prepararse.',
+    reqs: [{ chain: 'familia', tier: 2, count: 2 }], coins: 50, xp: 35,
+    lesson: 'La lealtad se cultiva en tiempos de paz para cosecharla en tiempos de guerra.' },
+  { icon: '💼', name: 'La oferta de Sollozzo',
+    text: 'El Turco ofrece narcóticos. Rechazarlo cuesta caro: junta una bolsa para resistir sin su dinero.',
+    reqs: [{ chain: 'dinero', tier: 3, count: 1 }], coins: 60, xp: 40,
+    lesson: 'El Don rechazó los narcóticos: hay dinero que cuesta más de lo que paga.' },
+  { icon: '🚓', name: 'El capitán McCluskey',
+    text: 'El capitán quiere su parte y además un favor firmado. La paz con la ley es cara.',
+    reqs: [{ chain: 'dinero', tier: 2, count: 2 }, { chain: 'favor', tier: 2, count: 1 }], coins: 70, xp: 45,
+    lesson: 'Los políticos y los policías se compran como los paraguas: antes de la tormenta.' },
+  { icon: '🇮🇹', name: 'Michael en Sicilia',
+    text: 'Mi hijo se esconde en Sicilia. Necesita un capo que lo proteja sin hacer preguntas.',
+    reqs: [{ chain: 'familia', tier: 3, count: 1 }], coins: 80, xp: 50,
+    lesson: '"Nunca dejes que nadie fuera de la familia sepa lo que estás pensando."' },
+  { icon: '🔥', name: 'Contener a Sonny',
+    text: 'Sonny quiere guerra hoy mismo. Solo un pacto sellado lo hará esperar.',
+    reqs: [{ chain: 'favor', tier: 3, count: 1 }], coins: 90, xp: 55,
+    lesson: '"Nunca te enojes. Nunca amenaces. Razona con la gente." La furia de Sonny lo llevó a la emboscada.' },
+  { icon: '🎰', name: 'El salto a Las Vegas',
+    text: 'El futuro está en el desierto: una trattoria de prestigio y una bolsa para invertir.',
+    reqs: [{ chain: 'negocio', tier: 3, count: 1 }, { chain: 'dinero', tier: 3, count: 1 }], coins: 110, xp: 65,
+    lesson: 'El futuro del imperio está donde el dinero es legal. Moverse antes que los demás es la mitad del negocio.' },
+  { icon: '🤝', name: 'Las Cinco Familias',
+    text: 'Convoco la paz entre las familias. Llevaré un pacto y a mi mejor capo a la mesa.',
+    reqs: [{ chain: 'favor', tier: 3, count: 1 }, { chain: 'familia', tier: 3, count: 1 }], coins: 130, xp: 75,
+    lesson: '"Mantén cerca a tus amigos, pero más cerca a tus enemigos."' },
+  { icon: '🕊️', name: 'La advertencia del Don',
+    text: 'Escucha, hijo: el que venga a ofrecerte la reunión con Barzini, ese es el traidor. Prepara un consigliere leal.',
+    reqs: [{ chain: 'familia', tier: 4, count: 1 }], coins: 160, xp: 90,
+    lesson: 'La experiencia de los mayores es un mapa de las trampas del camino. Escúchala.' },
+  { icon: '⛪', name: 'El bautizo',
+    text: 'Hoy arreglo todos los asuntos de la familia. Todo debe estar listo: el maletín y la alianza.',
+    reqs: [{ chain: 'dinero', tier: 4, count: 1 }, { chain: 'favor', tier: 3, count: 1 }], coins: 200, xp: 110,
+    lesson: 'Los problemas se cierran completos, no a medias. El día del ajuste de cuentas, Michael resolvió todo a la vez.' },
+  { icon: '👑', name: 'El nuevo Don',
+    text: 'Un imperio completo: el club, el consigliere y el maletín. Demuestra que estás listo para el anillo.',
+    reqs: [{ chain: 'negocio', tier: 4, count: 1 }, { chain: 'familia', tier: 4, count: 1 }, { chain: 'dinero', tier: 4, count: 1 }],
+    coins: 300, xp: 150,
+    lesson: '"Los grandes hombres no nacen grandes: crecen grandes." — Don Vito Corleone' }
+];
+
+// ================== Estado ==================
+let state = null;
+
+function freshState() {
+  const cells = new Array(CELLS).fill(null);
+  // Las tres últimas filas empiezan en niebla
+  for (let i = COLS * 4; i < CELLS; i++) cells[i] = { type: 'fog' };
+  // Productores
+  cells[7]  = { type: 'gen', id: 'genco',  charges: GENERATORS.genco.max,  last: Date.now() };
+  cells[10] = { type: 'gen', id: 'cocina', charges: GENERATORS.cocina.max, last: Date.now() };
+  // Objetos iniciales
+  cells[0]  = { type: 'item', chain: 'dinero', tier: 1 };
+  cells[1]  = { type: 'item', chain: 'dinero', tier: 1 };
+  cells[4]  = { type: 'item', chain: 'favor',  tier: 1 };
+  cells[5]  = { type: 'item', chain: 'favor',  tier: 1 };
+  cells[12] = { type: 'item', chain: 'familia', tier: 1 };
+  cells[17] = { type: 'item', chain: 'negocio', tier: 1 };
+  return { coins: 30, xp: 0, level: 1, questIndex: 0, fogBought: 0, cells, started: false };
+}
+
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
+function load() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s.cells || s.cells.length !== CELLS) return null;
+    return s;
+  } catch (e) { return null; }
+}
+
+// ================== Referencias UI ==================
+const $ = id => document.getElementById(id);
+const boardEl = $('board');
+const ghost = $('ghost');
+let selected = null; // índice de celda seleccionada
+
+// ================== Renderizado ==================
+function tierDots(t) { return '★'.repeat(t); }
+
+function render() {
+  // Cabecera
+  $('level-badge').textContent = 'Nivel ' + state.level;
+  $('coins').textContent = '🪙 ' + state.coins;
+  const need = xpNeeded();
+  $('xp-fill').style.width = Math.min(100, state.xp / need * 100) + '%';
+
+  // Tablero
+  for (let i = 0; i < CELLS; i++) {
+    const el = boardEl.children[i];
+    const c = state.cells[i];
+    el.className = 'cell';
+    el.innerHTML = '';
+    if (!c) continue;
+    if (c.type === 'fog') {
+      el.classList.add('fog');
+      el.innerHTML = '<span class="icon">🌫️</span><span class="fog-price">🪙 ' + fogPrice() + '</span>';
+    } else if (c.type === 'gen') {
+      el.classList.add('gen');
+      const g = GENERATORS[c.id];
+      el.innerHTML = '<span class="icon">' + g.icon + '</span><span class="tier"></span><span class="charges">' + c.charges + '</span>';
+    } else {
+      const ch = CHAINS[c.chain];
+      el.innerHTML = '<span class="icon">' + ch.icons[c.tier - 1] + '</span><span class="tier">' + tierDots(c.tier) + '</span>';
+    }
+    if (i === selected) el.classList.add('selected');
+  }
+
+  renderQuest();
+  renderInfo();
+}
+
+function renderQuest() {
+  const q = QUESTS[state.questIndex];
+  const deliverBtn = $('quest-deliver');
+  if (!q) {
+    $('quest-icon').textContent = '👑';
+    $('quest-name').textContent = 'Modo libre';
+    $('quest-text').textContent = 'El imperio es tuyo. Sigue fusionando a tu gusto.';
+    $('quest-reqs').innerHTML = '';
+    deliverBtn.style.display = 'none';
+    return;
+  }
+  deliverBtn.style.display = '';
+  $('quest-icon').textContent = q.icon;
+  $('quest-name').textContent = q.name;
+  $('quest-text').textContent = q.text;
+  let allOk = true;
+  $('quest-reqs').innerHTML = q.reqs.map(r => {
+    const have = countItems(r.chain, r.tier);
+    const ok = have >= r.count;
+    if (!ok) allOk = false;
+    return '<span class="req' + (ok ? ' ok' : '') + '">' + CHAINS[r.chain].icons[r.tier - 1] +
+           '<span class="count">' + Math.min(have, r.count) + '/' + r.count + '</span></span>';
+  }).join('');
+  deliverBtn.classList.toggle('ready', allOk);
+}
+
+function renderInfo() {
+  const info = $('info');
+  if (selected === null || !state.cells[selected]) {
+    info.innerHTML = '<span class="hint">Toca un productor para generar objetos. Arrastra dos objetos iguales para fusionarlos.</span>';
+    return;
+  }
+  const c = state.cells[selected];
+  if (c.type === 'fog') {
+    info.innerHTML = '<span id="info-icon">🌫️</span><div id="info-body"><div id="info-name">Territorio en niebla</div>' +
+      '<div id="info-sub">Expande el imperio de la familia</div></div>' +
+      '<button class="action-btn" id="btn-buy-fog">Comprar 🪙 ' + fogPrice() + '</button>';
+    $('btn-buy-fog').addEventListener('click', buyFog);
+  } else if (c.type === 'gen') {
+    const g = GENERATORS[c.id];
+    info.innerHTML = '<span id="info-icon">' + g.icon + '</span><div id="info-body"><div id="info-name">' + g.name + '</div>' +
+      '<div id="info-sub">Tócalo para producir · ' + c.charges + '/' + g.max + ' cargas (recarga sola)</div></div>';
+  } else {
+    const ch = CHAINS[c.chain];
+    const maxed = c.tier >= MAX_TIER;
+    info.innerHTML = '<span id="info-icon">' + ch.icons[c.tier - 1] + '</span><div id="info-body">' +
+      '<div id="info-name">' + ch.names[c.tier - 1] + ' <span style="color:var(--gold)">' + tierDots(c.tier) + '</span></div>' +
+      '<div id="info-sub">' + (maxed ? 'Nivel máximo de su cadena' : 'Fusiónalo con otro igual para mejorarlo') + '</div></div>' +
+      '<button class="action-btn" id="btn-sell">Vender 🪙 ' + SELL_PRICE[c.tier] + '</button>';
+    $('btn-sell').addEventListener('click', sellSelected);
+  }
+}
+
+// ================== Lógica ==================
+function xpNeeded() { return state.level * 80; }
+function fogPrice() { return 30 + state.fogBought * 25; }
+
+function countItems(chain, tier) {
+  let n = 0;
+  for (const c of state.cells) if (c && c.type === 'item' && c.chain === chain && c.tier === tier) n++;
+  return n;
+}
+
+function emptyCells() {
+  const out = [];
+  for (let i = 0; i < CELLS; i++) if (!state.cells[i]) out.push(i);
+  return out;
+}
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function gainXp(amount) {
+  state.xp += amount;
+  while (state.xp >= xpNeeded()) {
+    state.xp -= xpNeeded();
+    state.level++;
+    state.coins += 40;
+    // Recargar productores al subir de nivel
+    for (const c of state.cells) if (c && c.type === 'gen') { c.charges = GENERATORS[c.id].max; c.last = Date.now(); }
+    toast('🎉 ¡Nivel ' + state.level + '! +40 🪙 y productores recargados');
+  }
+}
+
+function produce(idx) {
+  const c = state.cells[idx];
+  const g = GENERATORS[c.id];
+  if (c.charges <= 0) { toast('El productor está recargando…'); return; }
+  const empty = emptyCells();
+  if (empty.length === 0) { toast('No hay espacio en el tablero. Vende o fusiona algo.'); return; }
+  c.charges--;
+  if (c.charges === g.max - 1) c.last = Date.now();
+  const chain = g.pool[Math.floor(Math.random() * g.pool.length)];
+  const tier = Math.random() < 0.12 ? 2 : 1; // golpe de suerte ocasional
+  // Prefiere una celda vacía cercana al productor
+  empty.sort((a, b) => dist(a, idx) - dist(b, idx));
+  const target = empty[0];
+  state.cells[target] = { type: 'item', chain, tier };
+  popCell(target);
+  save();
+  render();
+}
+
+function dist(a, b) {
+  const ax = a % COLS, ay = Math.floor(a / COLS);
+  const bx = b % COLS, by = Math.floor(b / COLS);
+  return Math.abs(ax - bx) + Math.abs(ay - by);
+}
+
+function popCell(idx) {
+  requestAnimationFrame(() => {
+    const icon = boardEl.children[idx].querySelector('.icon');
+    if (icon) icon.classList.add('pop');
+  });
+}
+
+function sellSelected() {
+  const c = state.cells[selected];
+  if (!c || c.type !== 'item') return;
+  state.coins += SELL_PRICE[c.tier];
+  state.cells[selected] = null;
+  toast('Vendido por 🪙 ' + SELL_PRICE[c.tier]);
+  selected = null;
+  save();
+  render();
+}
+
+function buyFog() {
+  const price = fogPrice();
+  if (state.coins < price) { toast('Te faltan monedas. Vende objetos o cumple encargos.'); return; }
+  state.coins -= price;
+  state.fogBought++;
+  state.cells[selected] = null;
+  toast('🗺️ Territorio expandido');
+  selected = null;
+  save();
+  render();
+}
+
+function tryDeliver() {
+  const q = QUESTS[state.questIndex];
+  if (!q) return;
+  for (const r of q.reqs) {
+    if (countItems(r.chain, r.tier) < r.count) { toast('Aún te faltan objetos para este encargo.'); return; }
+  }
+  // Consumir los objetos requeridos
+  for (const r of q.reqs) {
+    let left = r.count;
+    for (let i = CELLS - 1; i >= 0 && left > 0; i--) {
+      const c = state.cells[i];
+      if (c && c.type === 'item' && c.chain === r.chain && c.tier === r.tier) {
+        state.cells[i] = null;
+        left--;
+      }
+    }
+  }
+  state.coins += q.coins;
+  gainXp(q.xp);
+  state.questIndex++;
+  selected = null;
+  save();
+  render();
+  showLesson(q.lesson, '+' + q.coins + ' 🪙 · +' + q.xp + ' XP', () => {
+    if (state.questIndex >= QUESTS.length) $('screen-win').classList.add('show');
+  });
+}
+
+function showLesson(text, reward, onDone) {
+  $('lesson-quote').textContent = text;
+  $('lesson-reward').textContent = reward;
+  const el = $('lesson');
+  el.classList.add('show');
+  const close = () => {
+    el.classList.remove('show');
+    el.removeEventListener('pointerdown', close);
+    if (onDone) onDone();
+  };
+  setTimeout(() => el.addEventListener('pointerdown', close), 400);
+}
+
+// Recarga de productores
+setInterval(() => {
+  if (!state || !state.started) return;
+  let changed = false;
+  const now = Date.now();
+  for (const c of state.cells) {
+    if (c && c.type === 'gen') {
+      const g = GENERATORS[c.id];
+      while (c.charges < g.max && now - c.last >= g.regenMs) {
+        c.charges++;
+        c.last += g.regenMs;
+        changed = true;
+      }
+      if (c.charges >= g.max) c.last = now;
+    }
+  }
+  if (changed) { save(); render(); }
+}, 1000);
+
+// ================== Interacción (tap y arrastre) ==================
+let drag = null;
+
+boardEl.addEventListener('pointerdown', e => {
+  const cellEl = e.target.closest('.cell');
+  if (!cellEl) return;
+  const idx = Array.prototype.indexOf.call(boardEl.children, cellEl);
+  drag = { from: idx, x0: e.clientX, y0: e.clientY, moved: false };
+});
+
+document.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+  if (!drag.moved && Math.hypot(dx, dy) > 10) {
+    const c = state.cells[drag.from];
+    if (!c || c.type === 'fog') { drag = null; return; } // la niebla no se arrastra
+    drag.moved = true;
+    const icon = c.type === 'gen' ? GENERATORS[c.id].icon : CHAINS[c.chain].icons[c.tier - 1];
+    ghost.textContent = icon;
+    ghost.style.display = 'block';
+    boardEl.children[drag.from].style.opacity = '.3';
+  }
+  if (drag.moved) {
+    ghost.style.left = e.clientX + 'px';
+    ghost.style.top = e.clientY + 'px';
+  }
+});
+
+document.addEventListener('pointerup', e => {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  ghost.style.display = 'none';
+  if (boardEl.children[d.from]) boardEl.children[d.from].style.opacity = '';
+
+  if (!d.moved) { handleTap(d.from); return; }
+
+  const targetEl = document.elementFromPoint(e.clientX, e.clientY);
+  const cellEl = targetEl && targetEl.closest('.cell');
+  if (!cellEl) { render(); return; }
+  const to = Array.prototype.indexOf.call(boardEl.children, cellEl);
+  if (to === d.from) { render(); return; }
+
+  const a = state.cells[d.from], b = state.cells[to];
+  if (b && b.type === 'fog') { toast('Primero compra ese territorio.'); render(); return; }
+
+  if (!b) {
+    state.cells[to] = a;
+    state.cells[d.from] = null;
+  } else if (a.type === 'item' && b.type === 'item' && a.chain === b.chain && a.tier === b.tier) {
+    if (a.tier >= MAX_TIER) { toast('Ya es el nivel máximo de su cadena.'); render(); return; }
+    state.cells[to] = { type: 'item', chain: a.chain, tier: a.tier + 1 };
+    state.cells[d.from] = null;
+    state.coins += 1; // pequeña propina por fusionar
+    gainXp(2);
+    popCell(to);
+    toast('✨ ' + CHAINS[a.chain].names[a.tier] + ' creado · +1 🪙');
+  } else {
+    // Intercambiar posiciones
+    state.cells[to] = a;
+    state.cells[d.from] = b;
+  }
+  selected = null;
+  save();
+  render();
+});
+
+document.addEventListener('pointercancel', () => {
+  if (drag && boardEl.children[drag.from]) boardEl.children[drag.from].style.opacity = '';
+  drag = null;
+  ghost.style.display = 'none';
+});
+
+function handleTap(idx) {
+  const c = state.cells[idx];
+  if (c && c.type === 'gen') {
+    selected = idx;
+    produce(idx);
+    return;
+  }
+  selected = (selected === idx || !c) ? null : idx;
+  render();
+}
+
+$('quest-deliver').addEventListener('click', tryDeliver);
+
+$('btn-start').addEventListener('click', () => {
+  $('screen-start').classList.remove('show');
+  state.started = true;
+  save();
+});
+$('btn-continue').addEventListener('click', () => $('screen-win').classList.remove('show'));
+
+// ================== Inicio ==================
+(function init() {
+  for (let i = 0; i < CELLS; i++) {
+    const div = document.createElement('div');
+    div.className = 'cell';
+    boardEl.appendChild(div);
+  }
+  state = load() || freshState();
+  if (state.started) $('screen-start').classList.remove('show');
+  render();
+})();
+</script>
+</body>
+</html>
