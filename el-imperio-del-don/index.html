@@ -3,31 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0d0a08">
-<title>El Imperio del Don — Juego de Fusiones</title>
+<meta name="theme-color" content="#7da35a">
+<title>El Imperio del Don — Mundo de negocios</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   :root {
-    --bg: #0d0a08;
-    --panel: #1a1410;
-    --cell: #211a14;
-    --cell-border: #3a2f22;
-    --gold: #c9a227;
-    --gold-dim: #8a7020;
-    --cream: #e8dcc8;
-    --muted: #9c8f7a;
-    --red: #8e2323;
-    --green: #4a7a3a;
+    --grass1: #8ab164;
+    --grass2: #7da35a;
+    --stone: #eee1bd;
+    --stone-line: #cdb789;
+    --path: #c2b49a;
+    --path-dot: #a99a80;
+    --ink: #33291f;
+    --cream: #f8f0dc;
+    --cream-dark: #efe4c8;
+    --gold: #b8860b;
+    --gold-bright: #d4a017;
+    --terra: #b06a4a;
+    --olive: #6d7f3c;
+    --blue: #3e4e6b;
+    --red: #a03c3c;
+    --green-ok: #4a7a3a;
   }
 
   html, body {
     height: 100%;
-    background: var(--bg);
-    color: var(--cream);
+    background: var(--grass2);
+    color: var(--ink);
     font-family: Georgia, 'Times New Roman', serif;
     overflow: hidden;
-    touch-action: none;
+    touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
   }
@@ -38,210 +44,353 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    padding: 10px 12px;
     position: relative;
+    background: var(--grass2);
   }
 
-  /* ---------- Cabecera ---------- */
+  /* ================= Cabecera ================= */
   #header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding-bottom: 8px;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--cream);
+    border-bottom: 3px solid var(--stone-line);
+    z-index: 5;
   }
-  #level-badge {
-    background: var(--panel);
-    border: 1px solid var(--gold-dim);
+  #cash {
+    background: var(--cream-dark);
+    border: 1px solid var(--stone-line);
     border-radius: 8px;
     padding: 4px 10px;
-    font-size: 13px;
-    color: var(--gold);
-    white-space: nowrap;
-  }
-  #xp-wrap { flex: 1; }
-  #xp-bar {
-    height: 8px;
-    background: #2e261d;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  #xp-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--gold);
-    border-radius: 4px;
-    transition: width .4s;
-  }
-  #coins {
-    background: var(--panel);
-    border: 1px solid var(--cell-border);
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: bold;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
-
-  /* ---------- Misión actual ---------- */
-  #quest {
-    background: linear-gradient(160deg, #262019, var(--panel));
-    border: 1px solid var(--cell-border);
-    border-radius: 12px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  #quest-icon { font-size: 34px; }
-  #quest-body { flex: 1; min-width: 0; }
-  #quest-name {
-    color: var(--gold);
-    font-size: 11px;
-    letter-spacing: 2px;
+  #goal-wrap { flex: 1; min-width: 0; }
+  #goal-label {
+    font-size: 10px;
+    color: var(--terra);
+    letter-spacing: 1px;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  #quest-text { font-size: 13px; line-height: 1.35; margin: 2px 0 6px; font-style: italic; }
-  #quest-reqs { display: flex; gap: 8px; flex-wrap: wrap; }
-  .req {
-    background: var(--cell);
-    border: 1px solid var(--cell-border);
+  #goal-bar { height: 8px; background: var(--cream-dark); border-radius: 4px; overflow: hidden; border: 1px solid var(--stone-line); margin-top: 2px; }
+  #goal-fill { height: 100%; width: 0%; background: var(--gold-bright); transition: width .5s; }
+  #btn-deal {
+    background: var(--cream-dark);
+    border: 1px solid var(--stone-line);
     border-radius: 8px;
-    padding: 2px 8px;
+    padding: 4px 10px;
     font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .req.ok { border-color: var(--green); }
-  .req .count { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .req.ok .count { color: #8fbf7f; }
-  #quest-deliver {
-    background: var(--gold);
-    color: #1a1208;
-    border: none;
-    border-radius: 10px;
     font-family: inherit;
-    font-weight: bold;
-    font-size: 13px;
-    padding: 10px 12px;
+    color: var(--ink);
     cursor: pointer;
-    opacity: .35;
+    white-space: nowrap;
+    opacity: .45;
   }
-  #quest-deliver.ready { opacity: 1; animation: glow 1.4s infinite; }
-  @keyframes glow {
-    0%,100% { box-shadow: 0 0 0 rgba(201,162,39,0); }
-    50% { box-shadow: 0 0 14px rgba(201,162,39,.7); }
+  #btn-deal.ready {
+    opacity: 1;
+    background: var(--gold-bright);
+    color: #fff;
+    border-color: var(--gold);
+    animation: dealPulse 1.2s infinite;
+  }
+  @keyframes dealPulse {
+    0%,100% { box-shadow: 0 0 0 rgba(212,160,23,0); }
+    50% { box-shadow: 0 0 12px rgba(212,160,23,.9); }
   }
 
-  /* ---------- Tablero ---------- */
-  #board-wrap {
+  /* ================= Mapa / mundo ================= */
+  #world-wrap {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 0;
+    overflow: hidden;
+    padding: 4px;
   }
-  #board {
+  #map {
+    position: relative;
+    aspect-ratio: 7 / 10;
+    max-height: 100%;
+    max-width: 100%;
+    height: 100%;
+  }
+  #tiles {
+    position: absolute;
+    inset: 0;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    width: 100%;
-    max-width: 420px;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(10, 1fr);
   }
-  .cell {
-    aspect-ratio: 1;
-    background: var(--cell);
-    border: 1px solid var(--cell-border);
-    border-radius: 10px;
+  .tile { position: relative; background: var(--grass1); }
+  .tile.g2 { background: var(--grass2); }
+  .tile.path {
+    background:
+      radial-gradient(circle at 30% 30%, var(--path-dot) 12%, transparent 13%),
+      radial-gradient(circle at 70% 60%, var(--path-dot) 10%, transparent 11%),
+      var(--path);
+  }
+  .tile .scenery {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(16px, 4.5vh, 30px);
+    pointer-events: none;
+  }
+  /* Parcela: solar en venta o negocio */
+  .tile.plot::before {
+    content: '';
+    position: absolute;
+    inset: 7%;
+    background: var(--stone);
+    border-radius: 18%;
+    box-shadow: inset 0 -3px 0 var(--stone-line), 0 1px 2px rgba(51,41,31,.25);
+  }
+  .tile.plot { cursor: pointer; }
+  .tile.plot.empty::before {
+    background: rgba(238,225,189,.55);
+    border: 2px dashed rgba(51,41,31,.35);
+    box-shadow: none;
+  }
+  .tile.plot.selected::before { box-shadow: inset 0 -3px 0 var(--stone-line), 0 0 0 3px var(--gold-bright); }
+  .tile .item {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: relative;
-    cursor: pointer;
+    z-index: 2;
   }
-  .cell.selected { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,162,39,.5); }
-  .cell.fog {
-    background: #14100c;
-    border-style: dashed;
-    color: var(--muted);
-  }
-  .cell .icon { font-size: 26px; line-height: 1; }
-  .cell .tier {
-    font-size: 8px;
+  .tile .icon { font-size: clamp(18px, 5vh, 34px); line-height: 1; }
+  .tile .lvl {
+    font-size: clamp(6px, 1.2vh, 9px);
     letter-spacing: 1px;
-    color: var(--gold);
-    margin-top: 3px;
-    height: 8px;
+    color: var(--terra);
+    margin-top: 1px;
+    height: 9px;
+    text-shadow: 0 1px 0 rgba(255,255,255,.6);
   }
-  .cell .charges {
+  .tile .sale {
+    font-size: clamp(8px, 1.6vh, 11px);
+    color: #7a6f5c;
+    font-style: italic;
+  }
+  .tile .money {
     position: absolute;
-    top: 2px;
-    right: 5px;
-    font-size: 10px;
-    color: var(--gold);
+    top: 2%;
+    right: 4%;
+    font-size: clamp(9px, 1.7vh, 12px);
+    font-weight: bold;
+    color: #fff;
+    background: var(--green-ok);
+    border-radius: 8px;
+    padding: 1px 5px;
+    z-index: 3;
     font-variant-numeric: tabular-nums;
+    animation: bob 1.4s infinite ease-in-out;
   }
-  .cell .fog-price { font-size: 10px; margin-top: 3px; }
-  .cell.gen { background: linear-gradient(160deg, #2c2318, var(--cell)); border-color: var(--gold-dim); }
-  .cell .pop { animation: pop .25s ease; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  .pop { animation: pop .3s ease; }
   @keyframes pop {
-    from { transform: scale(.4); }
+    from { transform: scale(.3); }
     60%  { transform: scale(1.25); }
     to   { transform: scale(1); }
   }
-
-  /* ---------- Fantasma de arrastre ---------- */
-  #ghost {
+  .float-cash {
     position: fixed;
+    z-index: 70;
+    font-weight: bold;
+    font-size: 15px;
+    color: #2e5a22;
+    text-shadow: 0 1px 0 rgba(255,255,255,.8);
     pointer-events: none;
-    font-size: 32px;
-    z-index: 50;
-    transform: translate(-50%, -60%);
-    display: none;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,.7));
+    animation: floatUp 1s ease forwards;
+  }
+  .float-cash.neg { color: var(--red); }
+  @keyframes floatUp {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-40px); }
   }
 
-  /* ---------- Panel de información ---------- */
-  #info {
-    min-height: 58px;
-    background: var(--panel);
-    border: 1px solid var(--cell-border);
-    border-radius: 12px;
-    margin-top: 10px;
-    padding: 8px 12px;
+  /* ================= Edificios emblemáticos ================= */
+  .landmark {
+    position: absolute;
+    width: 27%;
+    z-index: 4;
+    text-align: center;
+    pointer-events: none;
+  }
+  .landmark .build { position: relative; margin: 0 auto; width: 92%; }
+  .landmark .roof {
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 14px solid var(--terra);
+    border-radius: 2px;
+    margin: 0 4%;
+  }
+  .landmark .facade {
+    background: linear-gradient(180deg, #f3e6c3, #e6d3a3);
+    border: 2px solid rgba(51,41,31,.35);
+    border-radius: 4px 4px 6px 6px;
+    padding: 4% 2% 6%;
+    box-shadow: 0 3px 6px rgba(51,41,31,.35);
+  }
+  .landmark .emoji { font-size: clamp(20px, 4.6vh, 34px); line-height: 1.15; }
+  .landmark .plate {
+    margin-top: 2px;
+    background: var(--ink);
+    color: var(--cream);
+    font-size: clamp(7px, 1.4vh, 10px);
+    letter-spacing: .5px;
+    border-radius: 3px;
+    padding: 2px 3px;
+    line-height: 1.15;
+  }
+  .landmark .awning {
+    height: 7px;
+    border-radius: 0 0 5px 5px;
+    background: repeating-linear-gradient(90deg, var(--red) 0 8px, var(--cream) 8px 16px);
+    margin: 3px 6% 0;
+    box-shadow: 0 2px 3px rgba(51,41,31,.3);
+  }
+  .landmark.lm-genco .roof { border-bottom-color: var(--olive); }
+  .landmark.lm-genco .awning { background: repeating-linear-gradient(90deg, var(--olive) 0 8px, var(--cream) 8px 16px); }
+  .landmark.lm-club .roof { border-bottom-color: var(--blue); }
+  .landmark.lm-club .facade { background: linear-gradient(180deg, #4d5f80, var(--blue)); }
+  .landmark.lm-club .awning { background: repeating-linear-gradient(90deg, var(--blue) 0 8px, #c8cede 8px 16px); }
+  .landmark.lm-casa .roof { border-bottom-color: var(--gold); }
+  .landmark.lm-casa .facade { background: linear-gradient(180deg, #f8efd4, #ecdcae); }
+  .landmark.lm-casa .awning { display: none; }
+  .landmark.lot .roof, .landmark.lot .awning { visibility: hidden; }
+  .landmark.lot .facade {
+    background: rgba(238,225,189,.5);
+    border: 2px dashed rgba(51,41,31,.4);
+    box-shadow: none;
+  }
+  .landmark.lot .emoji { filter: grayscale(1); opacity: .55; }
+  .landmark.built-anim .build { animation: buildUp .8s ease; }
+  @keyframes buildUp {
+    0% { transform: scale(.5) translateY(20%); opacity: 0; }
+    60% { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* ================= Niebla ================= */
+  .fog {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 6;
+    background: linear-gradient(180deg, rgba(244,243,238,.55), rgba(238,237,230,.96) 30%, rgba(238,237,230,.97));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: opacity 1.2s;
+    text-align: center;
+  }
+  .fog .clouds { font-size: clamp(18px, 4vh, 30px); letter-spacing: -6px; opacity: .9; }
+  .fog .fog-label {
+    font-size: clamp(10px, 1.9vh, 13px);
+    color: #6b6355;
+    font-style: italic;
+    background: rgba(255,255,255,.7);
+    padding: 3px 10px;
+    border-radius: 10px;
+  }
+  .fog.cleared { opacity: 0; pointer-events: none; }
+
+  /* ================= Panel inferior ================= */
+  #panel {
+    background: var(--cream);
+    border-top: 3px solid var(--stone-line);
+    padding: 8px 12px 10px;
+    min-height: 112px;
+    z-index: 5;
+  }
+  #panel-inner { display: flex; align-items: center; gap: 10px; }
+  #p-icon {
+    font-size: 30px;
+    background: var(--cream-dark);
+    border: 2px solid var(--stone-line);
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 13px;
+    justify-content: center;
+    flex-shrink: 0;
   }
-  #info .hint { color: var(--muted); font-style: italic; line-height: 1.3; }
-  #info-icon { font-size: 28px; }
-  #info-body { flex: 1; line-height: 1.3; }
-  #info-name { color: var(--gold); }
-  #info-sub { color: var(--muted); font-size: 12px; }
-  .action-btn {
-    background: var(--cell);
-    color: var(--cream);
-    border: 1px solid var(--gold-dim);
-    border-radius: 8px;
+  #p-body { flex: 1; min-width: 0; }
+  #p-name {
+    color: var(--terra);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  #p-text { font-size: 13px; line-height: 1.35; font-style: italic; margin: 2px 0 4px; }
+  #p-sub { font-size: 12px; color: #7a6f5c; }
+  #p-actions { display: flex; flex-direction: column; gap: 6px; }
+  .btn {
+    background: var(--gold-bright);
+    color: #fff;
+    border: none;
+    border-bottom: 3px solid var(--gold);
+    border-radius: 10px;
     font-family: inherit;
+    font-weight: bold;
     font-size: 13px;
-    padding: 8px 12px;
+    padding: 9px 12px;
     cursor: pointer;
     white-space: nowrap;
   }
-  .action-btn:active { background: #2a2119; }
+  .btn:active { transform: translateY(1px); border-bottom-width: 2px; }
+  .btn.dim { opacity: .4; }
+  .btn.secondary { background: var(--cream-dark); color: var(--ink); border-bottom-color: var(--stone-line); font-weight: normal; }
+  /* Carrusel de compra de negocios */
+  #shop-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .shop-item {
+    flex-shrink: 0;
+    background: var(--cream-dark);
+    border: 1px solid var(--stone-line);
+    border-radius: 10px;
+    padding: 6px 10px;
+    text-align: center;
+    cursor: pointer;
+    min-width: 74px;
+  }
+  .shop-item:active { background: #e6d8b4; }
+  .shop-item.locked { opacity: .45; }
+  .shop-item .si-icon { font-size: 22px; }
+  .shop-item .si-name { font-size: 10px; line-height: 1.2; margin-top: 2px; }
+  .shop-item .si-cost { font-size: 11px; font-weight: bold; color: var(--green-ok); font-variant-numeric: tabular-nums; }
+  .shop-item .si-rate { font-size: 9px; color: #7a6f5c; }
 
-  /* ---------- Toast ---------- */
+  /* ================= Toast ================= */
   #toast {
     position: absolute;
-    bottom: 84px;
+    bottom: 132px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(20,15,10,.95);
-    border: 1px solid var(--gold-dim);
+    background: rgba(51,41,31,.92);
     color: var(--cream);
     padding: 8px 16px;
     border-radius: 10px;
@@ -255,39 +404,38 @@
   }
   #toast.show { opacity: 1; }
 
-  /* ---------- Lección / pantallas ---------- */
+  /* ================= Overlays ================= */
   .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(8,6,4,.95);
+    background: rgba(38,30,20,.93);
     display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 32px;
+    padding: 28px;
     z-index: 100;
+    color: var(--cream);
   }
   .overlay.show { display: flex; }
   .overlay .label {
-    color: var(--gold);
+    color: var(--gold-bright);
     font-size: 12px;
     letter-spacing: 4px;
     text-transform: uppercase;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
-  .overlay h1 { font-size: 34px; color: var(--gold); margin-bottom: 8px; letter-spacing: 1px; }
-  .overlay .quote {
-    font-size: 19px;
-    font-style: italic;
-    line-height: 1.5;
-    max-width: 330px;
-  }
-  .overlay .reward { margin-top: 18px; font-size: 15px; color: var(--gold); }
-  .overlay p { max-width: 320px; line-height: 1.6; font-size: 15px; margin: 8px 0; }
+  .overlay h1 { font-size: 30px; color: var(--gold-bright); margin-bottom: 8px; letter-spacing: 1px; }
+  .overlay h2 { font-size: 22px; color: var(--gold-bright); margin-bottom: 12px; }
+  .overlay .quote { font-size: 18px; font-style: italic; line-height: 1.5; max-width: 330px; }
+  .overlay .money-delta { margin-top: 14px; font-size: 22px; font-weight: bold; font-variant-numeric: tabular-nums; }
+  .overlay .money-delta.pos { color: #9fce8a; }
+  .overlay .money-delta.neg { color: #e08b8b; }
+  .overlay p { max-width: 330px; line-height: 1.6; font-size: 15px; margin: 8px 0; }
   .overlay .tap {
-    margin-top: 30px;
-    color: var(--muted);
+    margin-top: 26px;
+    color: #b3a68d;
     font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -295,18 +443,56 @@
   }
   @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
   .big-btn {
-    margin-top: 26px;
-    background: var(--gold);
-    color: #1a1208;
+    margin-top: 22px;
+    background: var(--gold-bright);
+    color: #fff;
     border: none;
+    border-bottom: 4px solid var(--gold);
     border-radius: 10px;
-    padding: 15px 44px;
+    padding: 14px 40px;
     font-family: inherit;
     font-size: 17px;
     font-weight: bold;
     cursor: pointer;
   }
-  .legend { font-size: 13px; color: var(--muted); line-height: 2; }
+  .legend { font-size: 13px; color: #cfc3a8; line-height: 2; }
+
+  /* Overlay de trato: personaje + opciones */
+  #deal-card {
+    background: var(--cream);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 20px 18px;
+    max-width: 340px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  }
+  #deal-icon { font-size: 44px; }
+  #deal-name {
+    color: var(--terra);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 6px 0 8px;
+  }
+  #deal-text { font-size: 15px; line-height: 1.45; font-style: italic; margin-bottom: 14px; }
+  #deal-options { display: flex; flex-direction: column; gap: 8px; }
+  .deal-opt {
+    background: var(--cream-dark);
+    border: 1px solid var(--stone-line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    line-height: 1.3;
+  }
+  .deal-opt:active { background: #e6d8b4; }
+  .deal-opt .risk { display: block; font-size: 11px; color: #7a6f5c; font-style: italic; }
+  .deal-opt.disabled { opacity: .4; pointer-events: none; }
 
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
@@ -317,53 +503,110 @@
 <div id="app">
 
   <div id="header">
-    <div id="level-badge">Nivel 1</div>
-    <div id="xp-wrap"><div id="xp-bar"><div id="xp-fill"></div></div></div>
-    <div id="coins">🪙 0</div>
-  </div>
-
-  <div id="quest">
-    <div id="quest-icon">😢</div>
-    <div id="quest-body">
-      <div id="quest-name"></div>
-      <div id="quest-text"></div>
-      <div id="quest-reqs"></div>
+    <div id="cash">$ 0</div>
+    <div id="goal-wrap">
+      <div id="goal-label"></div>
+      <div id="goal-bar"><div id="goal-fill"></div></div>
     </div>
-    <button id="quest-deliver">Cumplir</button>
+    <button id="btn-deal">🤝 Trato</button>
   </div>
 
-  <div id="board-wrap"><div id="board"></div></div>
+  <div id="world-wrap">
+    <div id="map">
+      <div id="tiles"></div>
+      <div class="landmark lm-genco lot" id="lm-genco" style="left:1.5%; top:3%;">
+        <div class="build">
+          <div class="roof"></div>
+          <div class="facade"><div class="emoji">🫒</div><div class="plate">Genco Olive Oil</div></div>
+          <div class="awning"></div>
+        </div>
+      </div>
+      <div class="landmark lm-trattoria lot" id="lm-trattoria" style="right:1.5%; top:3%;">
+        <div class="build">
+          <div class="roof"></div>
+          <div class="facade"><div class="emoji">🍝</div><div class="plate">Trattoria</div></div>
+          <div class="awning"></div>
+        </div>
+      </div>
+      <div class="landmark lm-club lot" id="lm-club" style="left:1.5%; bottom:1.5%;">
+        <div class="build">
+          <div class="roof"></div>
+          <div class="facade"><div class="emoji">🎷</div><div class="plate">Club Nocturno</div></div>
+          <div class="awning"></div>
+        </div>
+      </div>
+      <div class="landmark lm-casa lot" id="lm-casa" style="right:1.5%; bottom:1.5%;">
+        <div class="build">
+          <div class="roof"></div>
+          <div class="facade"><div class="emoji">🏛️</div><div class="plate">Casa del Don</div></div>
+          <div class="awning"></div>
+        </div>
+      </div>
+      <div class="fog" id="fog2" style="top:50%; height:20%;">
+        <div class="clouds">☁️☁️☁️</div>
+        <div class="fog-label" id="fog2-label"></div>
+      </div>
+      <div class="fog" id="fog3" style="top:70%; height:30%;">
+        <div class="clouds">☁️☁️☁️☁️</div>
+        <div class="fog-label" id="fog3-label"></div>
+      </div>
+    </div>
+  </div>
 
-  <div id="info"><span class="hint">Toca un productor para generar objetos. Arrastra dos objetos iguales para fusionarlos.</span></div>
+  <div id="panel"><div id="panel-inner"></div></div>
 
-  <div id="ghost"></div>
   <div id="toast"></div>
 
-  <div class="overlay" id="lesson">
-    <div class="label">Lección del Padrino</div>
-    <div class="quote" id="lesson-quote"></div>
-    <div class="reward" id="lesson-reward"></div>
+  <!-- Trato: propuesta con opciones -->
+  <div class="overlay" id="deal">
+    <div id="deal-card">
+      <div id="deal-icon">🤝</div>
+      <div id="deal-name"></div>
+      <div id="deal-text"></div>
+      <div id="deal-options"></div>
+    </div>
+  </div>
+
+  <!-- Resultado del trato + lección -->
+  <div class="overlay" id="result">
+    <div class="label">Resultado del trato</div>
+    <div class="quote" id="result-text"></div>
+    <div class="money-delta" id="result-money"></div>
+    <p id="result-lesson" style="font-style:italic; color:#cfc3a8;"></p>
     <div class="tap">Toca para continuar</div>
+  </div>
+
+  <!-- Hito de progreso -->
+  <div class="overlay" id="chapter">
+    <div class="label" id="ch-label"></div>
+    <h2 id="ch-title"></h2>
+    <p id="ch-text"></p>
+    <button class="big-btn" id="ch-btn">Continuar</button>
   </div>
 
   <div class="overlay show" id="screen-start">
     <h1>EL IMPERIO DEL DON</h1>
-    <div class="label">Un juego de fusiones</div>
-    <p>Construye el imperio de la familia: toca los productores 🫒 y 👨‍🍳 para generar objetos, y <b>arrastra dos iguales</b> para fusionarlos en algo mejor.</p>
-    <p class="legend">
-      🪙 Dinero &nbsp; 🍊 Negocios<br>
-      🧢 Familia &nbsp; ✉️ Favores
-    </p>
-    <p>Cumple los encargos de los personajes, aprende sus lecciones y expande tu territorio comprando las zonas en niebla.</p>
-    <button class="big-btn" id="btn-start">Abrir el negocio</button>
+    <div class="label">Un mundo de negocios</div>
+    <p>Nueva York, 1945. Tienes $100 y la palabra del Don. Conviértelos en un imperio.</p>
+    <p><b>Compra negocios</b> en los solares del barrio y recoge sus ganancias. <b>Escucha los tratos</b> 🤝 que te ofrecen: algunos pagan bien... otros son trampas. Cada decisión te hace ganar o perder dinero.</p>
+    <p class="legend">🍊 Compra barato · 💵 Cobra siempre · 🤝 Desconfía del trato perfecto</p>
+    <button class="big-btn" id="btn-start">Empezar con $100</button>
   </div>
 
   <div class="overlay" id="screen-win">
     <h1>ERES EL NUEVO DON</h1>
-    <div class="label" id="win-sub">El imperio está completo</div>
+    <div class="label">El imperio está completo</div>
     <div class="quote">"Los grandes hombres no nacen grandes: crecen grandes."</div>
-    <p>Completaste todos los encargos de la familia. El tablero queda abierto para que sigas fusionando tu imperio.</p>
+    <p id="win-stats"></p>
     <button class="big-btn" id="btn-continue">Seguir jugando</button>
+  </div>
+
+  <div class="overlay" id="screen-broke">
+    <h1>LA FAMILIA QUEBRÓ</h1>
+    <div class="label">Fin del negocio</div>
+    <div class="quote">"Nunca apuestes lo que no puedes perder: el imperio se construye cobrando, no soñando."</div>
+    <p id="broke-stats"></p>
+    <button class="big-btn" id="btn-restart">Volver a empezar</button>
   </div>
 
 </div>
@@ -371,107 +614,267 @@
 <script>
 'use strict';
 
-// ================== Datos ==================
-const COLS = 6, ROWS = 7, CELLS = COLS * ROWS;
-const SAVE_KEY = 'elImperioDelDon-v1';
+// ================== Mundo ==================
+const COLS = 7, ROWS = 10, CELLS = COLS * ROWS;
+const SAVE_KEY = 'elImperioDelDon-v3';
+const idx = (r, c) => r * COLS + c;
 
-const CHAINS = {
-  dinero:  { icons: ['🪙','💵','💰','💼','🏦'], names: ['Moneda','Fajo de billetes','Bolsa de dinero','Maletín','Bóveda'] },
-  negocio: { icons: ['🍊','🏪','🍝','🎷','🎰'], names: ['Puesto de fruta','Colmado','Trattoria','Club de jazz','Casino'] },
-  familia: { icons: ['🧢','🕴️','🎩','🤵','👪'], names: ['Recluta','Soldado','Capo','Consigliere','La Familia'] },
-  favor:   { icons: ['✉️','🤝','📜','🕊️','🗝️'], names: ['Carta','Favor','Pacto','Alianza','Influencia'] }
+const ZONES = [
+  { rows: [2, 4], cols: [1, 5], milestone: 0 },
+  { rows: [5, 6], cols: [1, 5], milestone: 2 },
+  { rows: [7, 7], cols: [1, 5], milestone: 3 }
+];
+
+const SCENERY = {};
+const PATHS = new Set();
+(function buildTerrain() {
+  const trees = ['🌳','🌲','🌳','⛪','🌳','🌲','🌳'];
+  for (let c = 0; c < COLS; c++) SCENERY[idx(0, c)] = trees[c];
+  for (let c = 1; c <= 5; c++) PATHS.add(idx(1, c));
+  for (let r = 1; r <= 9; r++) PATHS.add(idx(r, 6));
+  SCENERY[idx(1, 3)] = '⛲';
+  SCENERY[idx(2, 0)] = '🍇'; SCENERY[idx(3, 0)] = '🍇'; SCENERY[idx(4, 0)] = '🍇';
+  SCENERY[idx(5, 0)] = '🌳'; SCENERY[idx(6, 0)] = '🌷'; SCENERY[idx(7, 0)] = '🌳';
+  SCENERY[idx(3, 6)] = '🚙'; SCENERY[idx(6, 6)] = '🚕';
+  SCENERY[idx(8, 2)] = '🌳'; SCENERY[idx(8, 3)] = '🌷'; SCENERY[idx(8, 4)] = '🌳';
+  SCENERY[idx(9, 1)] = '🌷'; SCENERY[idx(9, 3)] = '🌳'; SCENERY[idx(9, 5)] = '🌷';
+})();
+
+// ================== Negocios ==================
+const BIZ = {
+  fruta:    { icon: '🍊', name: 'Puesto de fruta', cost: 50,   income: 10,  cycleMs: 8000,  unlock: 0 },
+  colmado:  { icon: '🏪', name: 'Colmado',         cost: 150,  income: 32,  cycleMs: 11000, unlock: 0 },
+  sastre:   { icon: '🧵', name: 'Sastrería',       cost: 320,  income: 70,  cycleMs: 13000, unlock: 1 },
+  trattoria:{ icon: '🍝', name: 'Trattoria',       cost: 700,  income: 160, cycleMs: 16000, unlock: 1 },
+  club:     { icon: '🎷', name: 'Club de jazz',    cost: 1600, income: 380, cycleMs: 20000, unlock: 2 },
+  casino:   { icon: '🎰', name: 'Casino',          cost: 3500, income: 900, cycleMs: 26000, unlock: 3 }
 };
-const MAX_TIER = 5;
-const SELL_PRICE = [0, 2, 6, 18, 50, 140]; // por nivel (índice = tier)
+const MAX_LVL = 3;
+const ACCRUE_CAP = 3; // pagos acumulables sin cobrar
 
-const GENERATORS = {
-  genco:   { icon: '🫒', name: 'Genco Olive Oil',    pool: ['dinero','favor'],   max: 8, regenMs: 8000 },
-  cocina:  { icon: '👨‍🍳', name: 'Cocina de Clemenza', pool: ['negocio','familia'], max: 8, regenMs: 8000 }
-};
+// ================== Hitos (patrimonio ganado en total) ==================
+const MILESTONES = [
+  { at: 600,   builds: 'lm-genco',     title: 'El negocio legítimo',
+    text: 'Genco Olive Oil abre sus puertas: la fachada perfecta. Todo imperio necesita un negocio legal a la vista. Nuevos negocios disponibles: la sastrería y la trattoria.' },
+  { at: 2500,  builds: 'lm-trattoria', title: 'El corazón del barrio',
+    text: 'La Trattoria se inaugura y el barrio entero te debe un plato... y un favor. La niebla del sur se despeja: hay más solares donde invertir, y el club de jazz espera tu dinero.' },
+  { at: 8000,  builds: 'lm-club',      title: 'La noche es nuestra',
+    text: 'El Club Nocturno enciende sus luces. El dinero baila y nadie hace preguntas. Se despeja el resto del barrio y el casino entra en tu catálogo.' },
+  { at: 20000, builds: 'lm-casa',      title: 'La Casa del Don',
+    text: 'La Casa del Don corona el barrio. Las Cinco Familias reconocen tu imperio.' }
+];
 
-// Misiones: personaje, texto, requisitos, recompensa y lección del Padrino
-const QUESTS = [
+// ================== Tratos ==================
+// Cada opción: cost (se paga al elegir), outcomes con probabilidad p:
+// now = dinero inmediato, later/laterMs = pago diferido, text = qué pasó.
+const DEALS = [
   { icon: '😢', name: 'Bonasera, el enterrador',
-    text: 'Creí en América... pero hoy necesito tu ayuda. Acepta mis cartas de respeto.',
-    reqs: [{ chain: 'favor', tier: 1, count: 2 }], coins: 20, xp: 15,
-    lesson: '"Algún día, y quizá ese día nunca llegue, te pediré un favor." Los favores valen más que el dinero.' },
+    text: 'Don, necesito $60 para la justicia de mi hija. Le pagaré con gratitud... y con intereses.',
+    options: [
+      { label: 'Prestar $60', cost: 60,
+        outcomes: [{ p: 1, later: 110, laterMs: 40000, text: 'Bonasera cumple su palabra. A los pocos días devuelve el préstamo con respeto.' }],
+        lesson: '"Algún día, y quizá ese día nunca llegue, te pediré un favor." Los favores bien sembrados pagan mejor que los bancos.' },
+      { label: 'Rechazar', cost: 0,
+        outcomes: [{ p: 1, text: 'Bonasera se lleva su pena a otra parte. No ganas ni pierdes.' }],
+        lesson: 'Quien solo ayuda cuando le sobra, nunca construye lealtades.' }
+    ] },
   { icon: '🍝', name: 'Clemenza',
-    text: 'Necesito un soldado de confianza para el trabajo del martes.',
-    reqs: [{ chain: 'familia', tier: 2, count: 1 }], coins: 25, xp: 20,
-    lesson: '"Deja el arma. Trae los cannoli." Los asuntos feos se resuelven sin ruido y la vida sigue.' },
-  { icon: '⚖️', name: 'Tom Hagen',
-    text: 'Con un buen fajo arreglo en el juzgado lo que cien hombres no arreglan en la calle.',
-    reqs: [{ chain: 'dinero', tier: 2, count: 1 }], coins: 30, xp: 20,
-    lesson: '"Un abogado con su maletín puede robar más que cien hombres con pistolas."' },
-  { icon: '💒', name: 'La boda de Connie',
-    text: 'Es la boda de mi hija. Hoy no se le niega ningún favor a nadie.',
-    reqs: [{ chain: 'favor', tier: 2, count: 1 }, { chain: 'dinero', tier: 1, count: 2 }], coins: 40, xp: 30,
-    lesson: 'Ningún siciliano puede negar un favor el día de la boda de su hija. La generosidad compra lealtades que el miedo no consigue.' },
-  { icon: '🫒', name: 'Genco Abbandando',
-    text: 'El aceite de oliva es la mejor fachada. Consígueme un colmado donde venderlo.',
-    reqs: [{ chain: 'negocio', tier: 2, count: 1 }], coins: 45, xp: 30,
-    lesson: 'Todo imperio necesita un negocio legítimo a la vista. El crimen perfecto parece un negocio legal.' },
-  { icon: '🤵', name: 'Luca Brasi',
-    text: 'Don, déjeme entrenar a dos soldados más. La paz es el mejor momento para prepararse.',
-    reqs: [{ chain: 'familia', tier: 2, count: 2 }], coins: 50, xp: 35,
-    lesson: 'La lealtad se cultiva en tiempos de paz para cosecharla en tiempos de guerra.' },
-  { icon: '💼', name: 'La oferta de Sollozzo',
-    text: 'El Turco ofrece narcóticos. Rechazarlo cuesta caro: junta una bolsa para resistir sin su dinero.',
-    reqs: [{ chain: 'dinero', tier: 3, count: 1 }], coins: 60, xp: 40,
-    lesson: 'El Don rechazó los narcóticos: hay dinero que cuesta más de lo que paga.' },
+    text: 'Un negocio pequeño y seguro, Don: $100 hoy, $150 en unos días. Sin sorpresas, se lo juro.',
+    options: [
+      { label: 'Invertir $100', cost: 100,
+        outcomes: [{ p: 1, later: 150, laterMs: 30000, text: 'Como siempre, Clemenza cumple. Negocio pequeño, ganancia segura.' }],
+        lesson: 'Los negocios aburridos construyen imperios. Los emocionantes construyen funerales.' },
+      { label: 'Pasar', cost: 0,
+        outcomes: [{ p: 1, text: 'Clemenza se encoge de hombros y se come los cannoli él solo.' }],
+        lesson: 'No pasa nada por dejar pasar un buen negocio. Sí por meterse en uno malo.' }
+    ] },
+  { icon: '💼', name: 'Sollozzo, el Turco',
+    text: 'Narcóticos, Don. Ponga $300 y le devuelvo el triple. Las Cinco Familias ya están dentro...',
+    options: [
+      { label: 'Invertir $300', cost: 300,
+        outcomes: [
+          { p: .35, now: 900, text: 'Esta vez salió bien. Pero has manchado el nombre de la familia... y el Turco ya sabe dónde vives.' },
+          { p: .65, text: 'La policía cae sobre el cargamento. Pierdes todo lo invertido y ganas enemigos.' }
+        ],
+        lesson: 'El Don rechazó los narcóticos: hay dinero que cuesta más de lo que paga.' },
+      { label: 'Rechazar con cortesía', cost: 0,
+        outcomes: [{ p: 1, text: 'Le dices que no con respeto. Tus amigos políticos siguen siendo tus amigos.' }],
+        lesson: '"Tengo muchos amigos en la política. Dejarían de serlo si mi negocio fueran las drogas."' }
+    ] },
+  { icon: '🎭', name: 'Fredo',
+    text: 'Hermano, tengo una idea GRANDIOSA. Solo necesito $150. Esta vez es distinto, ¡lo juro!',
+    options: [
+      { label: 'Darle los $150', cost: 150,
+        outcomes: [
+          { p: .2, later: 400, laterMs: 35000, text: 'Milagro: la idea de Fredo funciona. Hasta un reloj roto da la hora dos veces al día.' },
+          { p: .8, text: 'La "idea grandiosa" era un tipo de Las Vegas con un traje brillante. El dinero desapareció.' }
+        ],
+        lesson: '"Sé que fuiste tú, Fredo." El cariño no convierte un mal negocio en uno bueno.' },
+      { label: 'Decirle que no', cost: 0,
+        outcomes: [{ p: 1, text: 'Fredo se ofende, pero mañana se le pasa. Tu dinero sigue en tu bolsillo.' }],
+        lesson: 'A la familia se le da amor. El dinero, solo con un plan de negocio.' }
+    ] },
   { icon: '🚓', name: 'El capitán McCluskey',
-    text: 'El capitán quiere su parte y además un favor firmado. La paz con la ley es cara.',
-    reqs: [{ chain: 'dinero', tier: 2, count: 2 }, { chain: 'favor', tier: 2, count: 1 }], coins: 70, xp: 45,
-    lesson: 'Los políticos y los policías se compran como los paraguas: antes de la tormenta.' },
-  { icon: '🇮🇹', name: 'Michael en Sicilia',
-    text: 'Mi hijo se esconde en Sicilia. Necesita un capo que lo proteja sin hacer preguntas.',
-    reqs: [{ chain: 'familia', tier: 3, count: 1 }], coins: 80, xp: 50,
-    lesson: '"Nunca dejes que nadie fuera de la familia sepa lo que estás pensando."' },
-  { icon: '🔥', name: 'Contener a Sonny',
-    text: 'Sonny quiere guerra hoy mismo. Solo un pacto sellado lo hará esperar.',
-    reqs: [{ chain: 'favor', tier: 3, count: 1 }], coins: 90, xp: 55,
-    lesson: '"Nunca te enojes. Nunca amenaces. Razona con la gente." La furia de Sonny lo llevó a la emboscada.' },
-  { icon: '🎰', name: 'El salto a Las Vegas',
-    text: 'El futuro está en el desierto: una trattoria de prestigio y una bolsa para invertir.',
-    reqs: [{ chain: 'negocio', tier: 3, count: 1 }, { chain: 'dinero', tier: 3, count: 1 }], coins: 110, xp: 65,
-    lesson: 'El futuro del imperio está donde el dinero es legal. Moverse antes que los demás es la mitad del negocio.' },
-  { icon: '🤝', name: 'Las Cinco Familias',
-    text: 'Convoco la paz entre las familias. Llevaré un pacto y a mi mejor capo a la mesa.',
-    reqs: [{ chain: 'favor', tier: 3, count: 1 }, { chain: 'familia', tier: 3, count: 1 }], coins: 130, xp: 75,
-    lesson: '"Mantén cerca a tus amigos, pero más cerca a tus enemigos."' },
-  { icon: '🕊️', name: 'La advertencia del Don',
-    text: 'Escucha, hijo: el que venga a ofrecerte la reunión con Barzini, ese es el traidor. Prepara un consigliere leal.',
-    reqs: [{ chain: 'familia', tier: 4, count: 1 }], coins: 160, xp: 90,
-    lesson: 'La experiencia de los mayores es un mapa de las trampas del camino. Escúchala.' },
-  { icon: '⛪', name: 'El bautizo',
-    text: 'Hoy arreglo todos los asuntos de la familia. Todo debe estar listo: el maletín y la alianza.',
-    reqs: [{ chain: 'dinero', tier: 4, count: 1 }, { chain: 'favor', tier: 3, count: 1 }], coins: 200, xp: 110,
-    lesson: 'Los problemas se cierran completos, no a medias. El día del ajuste de cuentas, Michael resolvió todo a la vez.' },
-  { icon: '👑', name: 'El nuevo Don',
-    text: 'Un imperio completo: el club, el consigliere y el maletín. Demuestra que estás listo para el anillo.',
-    reqs: [{ chain: 'negocio', tier: 4, count: 1 }, { chain: 'familia', tier: 4, count: 1 }, { chain: 'dinero', tier: 4, count: 1 }],
-    coins: 300, xp: 150,
-    lesson: '"Los grandes hombres no nacen grandes: crecen grandes." — Don Vito Corleone' }
+    text: 'Bonita trattoria... sería una pena que alguien la inspeccionara. $120 y me olvido del barrio.',
+    options: [
+      { label: 'Pagar los $120', cost: 120,
+        outcomes: [{ p: 1, text: 'El capitán se olvida de tu nombre. Cara, pero la paz con la ley siempre es más barata que la guerra.' }],
+        lesson: 'Los políticos y los policías se compran como los paraguas: antes de la tormenta.' },
+      { label: 'Negarte', cost: 0,
+        outcomes: [
+          { p: .5, text: 'Esta vez no pasó nada. El capitán encontró a otro a quien exprimir.' },
+          { p: .5, now: -250, text: 'Redada "de rutina". Multas, cierres y abogados: te cuesta $250.' }
+        ],
+        lesson: 'A veces la avaricia sale gratis. A veces sale al doble. Esa es la matemática del riesgo.' }
+    ] },
+  { icon: '🏇', name: 'El productor Woltz',
+    text: 'Woltz no quiere darle el papel a tu ahijado. Presionarlo cuesta $200 en "gestiones"... pero Hollywood paga bien los favores.',
+    options: [
+      { label: 'Hacer la gestión ($200)', cost: 200,
+        outcomes: [
+          { p: .85, later: 520, laterMs: 30000, text: 'Woltz amanece convencido. El estudio te debe una y paga generosamente.' },
+          { p: .15, text: 'Woltz resultó más terco que su caballo. Pierdes las gestiones.' }
+        ],
+        lesson: '"Le haré una oferta que no podrá rechazar." El poder real convence sin disparar... casi siempre.' },
+      { label: 'Dejarlo pasar', cost: 0,
+        outcomes: [{ p: 1, text: 'Tu ahijado no consigue el papel. Hollywood no sabrá quién eres.' }],
+        lesson: 'Los favores que no haces también tienen precio: se llama irrelevancia.' }
+    ] },
+  { icon: '🏦', name: 'Hyman Roth',
+    text: 'Cuba, muchacho. $600 hoy y seremos más grandes que la U.S. Steel. Socios al 50%, con confianza.',
+    options: [
+      { label: 'Invertir $600', cost: 600,
+        outcomes: [
+          { p: .3, now: 2000, text: 'Sales de Cuba justo antes de la revolución, con las maletas llenas.' },
+          { p: .7, text: 'Roth sonreía mientras preparaba la traición. Adiós a los $600.' }
+        ],
+        lesson: '"Mantén cerca a tus amigos, pero más cerca a tus enemigos." Desconfía del socio demasiado dulce.' },
+      { label: 'Investigarlo primero', cost: 100,
+        outcomes: [
+          { p: 1, later: 450, laterMs: 25000, text: 'Tu investigación destapa el engaño y vendes la información a las otras familias. Ganancia limpia.' }],
+        lesson: 'El que tiene paciencia para investigar no necesita suerte para sobrevivir.' },
+      { label: 'Rechazar', cost: 0,
+        outcomes: [{ p: 1, text: 'Roth se busca otro socio. Duermes tranquilo.' }],
+        lesson: 'Ninguna fortuna vale más que despertar vivo.' }
+    ] },
+  { icon: '💒', name: 'La boda de Connie',
+    text: 'Es la boda de tu hermana. La tradición manda un regalo generoso: $100 delante de todo el barrio.',
+    options: [
+      { label: 'Regalar $100', cost: 100,
+        outcomes: [{ p: 1, later: 260, laterMs: 45000, text: 'El barrio toma nota de tu generosidad. Los favores vuelven multiplicados en las semanas siguientes.' }],
+        lesson: 'La generosidad en el momento justo compra lealtades que el miedo jamás conseguirá.' },
+      { label: 'Regalo modesto ($20)', cost: 20,
+        outcomes: [{ p: 1, text: 'Nadie dice nada. Pero todos lo recuerdan.' }],
+        lesson: 'Un Don tacaño en la boda de su hermana debilita aquello que lo hace Don.' }
+    ] },
+  { icon: '🗳️', name: 'El senador Geary',
+    text: 'Mi campaña necesita $250 "de amigos anónimos". Un senador agradecido vale su peso en oro.',
+    options: [
+      { label: 'Financiarlo ($250)', cost: 250,
+        outcomes: [
+          { p: .8, later: 620, laterMs: 40000, text: 'El senador gana y recuerda a sus amigos: licencias, permisos y contratos fluyen hacia ti.' },
+          { p: .2, text: 'El senador pierde las elecciones. Tu dinero se fue en pancartas.' }
+        ],
+        lesson: 'Los políticos son como los paraguas: se compran antes de la tormenta.' },
+      { label: 'Humillarlo y negarte', cost: 0,
+        outcomes: [
+          { p: .6, text: 'El senador traga saliva y se va. Por ahora.' },
+          { p: .4, now: -200, text: 'El senador gana... y te manda inspectores de impuestos como recuerdo. -$200.' }
+        ],
+        lesson: '"Nunca odies a tus enemigos: afecta tu juicio."' }
+    ] },
+  { icon: '📰', name: 'Un periodista',
+    text: 'Estoy escribiendo sobre "los negocios de la familia". Por $90 mi pluma escribe... otras cosas.',
+    options: [
+      { label: 'Comprar su pluma ($90)', cost: 90,
+        outcomes: [{ p: 1, text: 'El artículo sale hablando de tu amor por los huérfanos. La reputación se cuida antes, no después.' }],
+        lesson: 'Es mejor tener amigos en los periódicos que abogados en los tribunales.' },
+      { label: 'Que escriba lo que quiera', cost: 0,
+        outcomes: [
+          { p: .55, text: 'El artículo pasa sin pena ni gloria. Nadie lee la página 12.' },
+          { p: .45, now: -220, text: 'El escándalo espanta a tus clientes durante semanas. -$220.' }
+        ],
+        lesson: 'Lo que se publica no se puede despublicar.' }
+    ] },
+  { icon: '⚰️', name: 'Tessio',
+    text: 'Barzini quiere una reunión de paz, Don. Yo la organizo, en mi territorio. Es seguro...',
+    options: [
+      { label: 'Asistir confiado', cost: 0,
+        outcomes: [
+          { p: .75, now: -400, text: 'Era una trampa. Escapas, pero la emboscada te cuesta $400 en hombres y médicos.' },
+          { p: .25, now: 150, text: 'Contra todo pronóstico, la reunión era real. Se firma una tregua rentable.' }
+        ],
+        lesson: '"El que venga a ofrecerte la reunión con Barzini, ese es el traidor." Tu padre te lo advirtió.' },
+      { label: 'Oler la trampa y no ir', cost: 0,
+        outcomes: [{ p: 1, later: 300, laterMs: 20000, text: 'Descubres el plan de Tessio y lo desmantelas. Las otras familias pagan por la información.' }],
+        lesson: 'La advertencia de los viejos es un mapa de las trampas del camino.' }
+    ] },
+  { icon: '🍊', name: 'El puesto de naranjas',
+    text: 'El dueño del puesto de la esquina se retira. Te ofrece el local a precio de amigo: $80.',
+    options: [
+      { label: 'Comprarlo ($80)', cost: 80,
+        outcomes: [{ p: 1, later: 160, laterMs: 25000, text: 'El barrio agradece que el puesto siga abierto. El local se revaloriza rápido.' }],
+        lesson: 'El Don compraba naranjas cada semana en el mismo puesto: el barrio que te ve cerca, te protege.' },
+      { label: 'Regatear a $40', cost: 40,
+        outcomes: [
+          { p: .5, later: 160, laterMs: 25000, text: 'El viejo acepta a regañadientes. Buen negocio... y una amistad menos.' },
+          { p: .5, text: 'El viejo se ofende y le vende a la familia Barzini. El local perdido vale más que lo ahorrado.' }
+        ],
+        lesson: 'Exprimir al débil ahorra centavos y cuesta fortunas.' }
+    ] },
+  { icon: '🤵', name: 'Luca Brasi',
+    text: 'Don, por $80 al mes vigilo sus negocios. Nadie robará mientras Luca Brasi camine por el barrio.',
+    options: [
+      { label: 'Contratarlo ($80)', cost: 80,
+        outcomes: [{ p: 1, text: 'Con Luca en la calle, nadie se atreve a tocar lo tuyo. Ese silencio vale cada dólar.' }],
+        lesson: 'Un guardaespaldas leal cerca vale más que un espía lejos.' },
+      { label: 'Ahorrarte el gasto', cost: 0,
+        outcomes: [
+          { p: .55, text: 'Semana tranquila. Esta vez.' },
+          { p: .45, now: -180, text: 'Unos matones de Brooklyn asaltan tu caja registradora. -$180.' }
+        ],
+        lesson: 'La seguridad parece cara hasta el día en que resulta barata.' }
+    ] },
+  { icon: '🎬', name: 'Johnny Fontane',
+    text: 'Padrino, invierte $220 en mi próxima película. Con tu ayuda y mi voz... ¡taquillazo seguro!',
+    options: [
+      { label: 'Producir la película ($220)', cost: 220,
+        outcomes: [
+          { p: .6, later: 550, laterMs: 35000, text: 'La película es un éxito y Hollywood te abre las puertas.' },
+          { p: .4, later: 120, laterMs: 35000, text: 'La película es regular, pero el nombre de la familia suena en California. Recuperas parte.' }
+        ],
+        lesson: 'Invierte en la gente que te debe la carrera: su gratitud rinde intereses.' },
+      { label: 'Solo mandar flores', cost: 10,
+        outcomes: [{ p: 1, text: 'Johnny canta en la boda y todos lloran. Bonito, pero no factura.' }],
+        lesson: 'El cariño no paga la nómina.' }
+    ] }
 ];
 
 // ================== Estado ==================
 let state = null;
+let selected = null;
+let currentDeal = null;
 
 function freshState() {
-  const cells = new Array(CELLS).fill(null);
-  // Las tres últimas filas empiezan en niebla
-  for (let i = COLS * 4; i < CELLS; i++) cells[i] = { type: 'fog' };
-  // Productores
-  cells[7]  = { type: 'gen', id: 'genco',  charges: GENERATORS.genco.max,  last: Date.now() };
-  cells[10] = { type: 'gen', id: 'cocina', charges: GENERATORS.cocina.max, last: Date.now() };
-  // Objetos iniciales
-  cells[0]  = { type: 'item', chain: 'dinero', tier: 1 };
-  cells[1]  = { type: 'item', chain: 'dinero', tier: 1 };
-  cells[4]  = { type: 'item', chain: 'favor',  tier: 1 };
-  cells[5]  = { type: 'item', chain: 'favor',  tier: 1 };
-  cells[12] = { type: 'item', chain: 'familia', tier: 1 };
-  cells[17] = { type: 'item', chain: 'negocio', tier: 1 };
-  return { coins: 30, xp: 0, level: 1, questIndex: 0, fogBought: 0, cells, started: false };
+  return {
+    cash: 100,
+    earned: 0,          // patrimonio total ganado (para los hitos)
+    milestonesDone: 0,
+    cells: new Array(CELLS).fill(null), // {type:'biz', biz, lvl, last}
+    pending: [],        // pagos diferidos {due, amount, label}
+    nextDealAt: Date.now() + 18000,
+    dealQueue: shuffle(DEALS.map((_, i) => i)),
+    dealsTaken: 0,
+    started: false
+  };
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
@@ -485,114 +888,24 @@ function load() {
   } catch (e) { return null; }
 }
 
-// ================== Referencias UI ==================
+// ================== Utilidades ==================
 const $ = id => document.getElementById(id);
-const boardEl = $('board');
-const ghost = $('ghost');
-let selected = null; // índice de celda seleccionada
+const tilesEl = $('tiles');
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
 
-// ================== Renderizado ==================
-function tierDots(t) { return '★'.repeat(t); }
-
-function render() {
-  // Cabecera
-  $('level-badge').textContent = 'Nivel ' + state.level;
-  $('coins').textContent = '🪙 ' + state.coins;
-  const need = xpNeeded();
-  $('xp-fill').style.width = Math.min(100, state.xp / need * 100) + '%';
-
-  // Tablero
-  for (let i = 0; i < CELLS; i++) {
-    const el = boardEl.children[i];
-    const c = state.cells[i];
-    el.className = 'cell';
-    el.innerHTML = '';
-    if (!c) continue;
-    if (c.type === 'fog') {
-      el.classList.add('fog');
-      el.innerHTML = '<span class="icon">🌫️</span><span class="fog-price">🪙 ' + fogPrice() + '</span>';
-    } else if (c.type === 'gen') {
-      el.classList.add('gen');
-      const g = GENERATORS[c.id];
-      el.innerHTML = '<span class="icon">' + g.icon + '</span><span class="tier"></span><span class="charges">' + c.charges + '</span>';
-    } else {
-      const ch = CHAINS[c.chain];
-      el.innerHTML = '<span class="icon">' + ch.icons[c.tier - 1] + '</span><span class="tier">' + tierDots(c.tier) + '</span>';
-    }
-    if (i === selected) el.classList.add('selected');
+function zoneUnlocked(z) { return state.milestonesDone >= ZONES[z].milestone; }
+function isPlot(i) {
+  const r = Math.floor(i / COLS), c = i % COLS;
+  for (let z = 0; z < ZONES.length; z++) {
+    const zo = ZONES[z];
+    if (r >= zo.rows[0] && r <= zo.rows[1] && c >= zo.cols[0] && c <= zo.cols[1]) return zoneUnlocked(z);
   }
-
-  renderQuest();
-  renderInfo();
+  return false;
 }
 
-function renderQuest() {
-  const q = QUESTS[state.questIndex];
-  const deliverBtn = $('quest-deliver');
-  if (!q) {
-    $('quest-icon').textContent = '👑';
-    $('quest-name').textContent = 'Modo libre';
-    $('quest-text').textContent = 'El imperio es tuyo. Sigue fusionando a tu gusto.';
-    $('quest-reqs').innerHTML = '';
-    deliverBtn.style.display = 'none';
-    return;
-  }
-  deliverBtn.style.display = '';
-  $('quest-icon').textContent = q.icon;
-  $('quest-name').textContent = q.name;
-  $('quest-text').textContent = q.text;
-  let allOk = true;
-  $('quest-reqs').innerHTML = q.reqs.map(r => {
-    const have = countItems(r.chain, r.tier);
-    const ok = have >= r.count;
-    if (!ok) allOk = false;
-    return '<span class="req' + (ok ? ' ok' : '') + '">' + CHAINS[r.chain].icons[r.tier - 1] +
-           '<span class="count">' + Math.min(have, r.count) + '/' + r.count + '</span></span>';
-  }).join('');
-  deliverBtn.classList.toggle('ready', allOk);
-}
-
-function renderInfo() {
-  const info = $('info');
-  if (selected === null || !state.cells[selected]) {
-    info.innerHTML = '<span class="hint">Toca un productor para generar objetos. Arrastra dos objetos iguales para fusionarlos.</span>';
-    return;
-  }
-  const c = state.cells[selected];
-  if (c.type === 'fog') {
-    info.innerHTML = '<span id="info-icon">🌫️</span><div id="info-body"><div id="info-name">Territorio en niebla</div>' +
-      '<div id="info-sub">Expande el imperio de la familia</div></div>' +
-      '<button class="action-btn" id="btn-buy-fog">Comprar 🪙 ' + fogPrice() + '</button>';
-    $('btn-buy-fog').addEventListener('click', buyFog);
-  } else if (c.type === 'gen') {
-    const g = GENERATORS[c.id];
-    info.innerHTML = '<span id="info-icon">' + g.icon + '</span><div id="info-body"><div id="info-name">' + g.name + '</div>' +
-      '<div id="info-sub">Tócalo para producir · ' + c.charges + '/' + g.max + ' cargas (recarga sola)</div></div>';
-  } else {
-    const ch = CHAINS[c.chain];
-    const maxed = c.tier >= MAX_TIER;
-    info.innerHTML = '<span id="info-icon">' + ch.icons[c.tier - 1] + '</span><div id="info-body">' +
-      '<div id="info-name">' + ch.names[c.tier - 1] + ' <span style="color:var(--gold)">' + tierDots(c.tier) + '</span></div>' +
-      '<div id="info-sub">' + (maxed ? 'Nivel máximo de su cadena' : 'Fusiónalo con otro igual para mejorarlo') + '</div></div>' +
-      '<button class="action-btn" id="btn-sell">Vender 🪙 ' + SELL_PRICE[c.tier] + '</button>';
-    $('btn-sell').addEventListener('click', sellSelected);
-  }
-}
-
-// ================== Lógica ==================
-function xpNeeded() { return state.level * 80; }
-function fogPrice() { return 30 + state.fogBought * 25; }
-
-function countItems(chain, tier) {
-  let n = 0;
-  for (const c of state.cells) if (c && c.type === 'item' && c.chain === chain && c.tier === tier) n++;
-  return n;
-}
-
-function emptyCells() {
-  const out = [];
-  for (let i = 0; i < CELLS; i++) if (!state.cells[i]) out.push(i);
-  return out;
+function bizIncome(cell) { return BIZ[cell.biz].income * cell.lvl; }
+function accrued(cell, now) {
+  return Math.min(ACCRUE_CAP, Math.floor((now - cell.last) / BIZ[cell.biz].cycleMs));
 }
 
 function toast(msg) {
@@ -600,235 +913,362 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+  toast._t = setTimeout(() => t.classList.remove('show'), 1900);
 }
 
-function gainXp(amount) {
-  state.xp += amount;
-  while (state.xp >= xpNeeded()) {
-    state.xp -= xpNeeded();
-    state.level++;
-    state.coins += 40;
-    // Recargar productores al subir de nivel
-    for (const c of state.cells) if (c && c.type === 'gen') { c.charges = GENERATORS[c.id].max; c.last = Date.now(); }
-    toast('🎉 ¡Nivel ' + state.level + '! +40 🪙 y productores recargados');
+function floatCash(x, y, amount) {
+  const el = document.createElement('div');
+  el.className = 'float-cash' + (amount < 0 ? ' neg' : '');
+  el.textContent = (amount >= 0 ? '+' : '') + fmt(amount).replace('$-', '-$');
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+function gainCash(amount) {
+  state.cash += amount;
+  if (amount > 0) state.earned += amount;
+}
+
+// ================== Renderizado ==================
+function render() {
+  const now = Date.now();
+  $('cash').textContent = fmt(state.cash);
+
+  // Objetivo actual (hito)
+  const m = MILESTONES[state.milestonesDone];
+  if (m) {
+    $('goal-label').textContent = 'Próximo: ' + m.title + ' · ' + fmt(m.at);
+    $('goal-fill').style.width = Math.min(100, state.earned / m.at * 100) + '%';
+  } else {
+    $('goal-label').textContent = 'Imperio completo';
+    $('goal-fill').style.width = '100%';
   }
-}
 
-function produce(idx) {
-  const c = state.cells[idx];
-  const g = GENERATORS[c.id];
-  if (c.charges <= 0) { toast('El productor está recargando…'); return; }
-  const empty = emptyCells();
-  if (empty.length === 0) { toast('No hay espacio en el tablero. Vende o fusiona algo.'); return; }
-  c.charges--;
-  if (c.charges === g.max - 1) c.last = Date.now();
-  const chain = g.pool[Math.floor(Math.random() * g.pool.length)];
-  const tier = Math.random() < 0.12 ? 2 : 1; // golpe de suerte ocasional
-  // Prefiere una celda vacía cercana al productor
-  empty.sort((a, b) => dist(a, idx) - dist(b, idx));
-  const target = empty[0];
-  state.cells[target] = { type: 'item', chain, tier };
-  popCell(target);
-  save();
-  render();
-}
+  // Botón de trato
+  const ready = now >= state.nextDealAt;
+  $('btn-deal').classList.toggle('ready', ready);
+  $('btn-deal').textContent = ready ? '🤝 ¡Trato!' : '🤝 Trato';
 
-function dist(a, b) {
-  const ax = a % COLS, ay = Math.floor(a / COLS);
-  const bx = b % COLS, by = Math.floor(b / COLS);
-  return Math.abs(ax - bx) + Math.abs(ay - by);
-}
-
-function popCell(idx) {
-  requestAnimationFrame(() => {
-    const icon = boardEl.children[idx].querySelector('.icon');
-    if (icon) icon.classList.add('pop');
-  });
-}
-
-function sellSelected() {
-  const c = state.cells[selected];
-  if (!c || c.type !== 'item') return;
-  state.coins += SELL_PRICE[c.tier];
-  state.cells[selected] = null;
-  toast('Vendido por 🪙 ' + SELL_PRICE[c.tier]);
-  selected = null;
-  save();
-  render();
-}
-
-function buyFog() {
-  const price = fogPrice();
-  if (state.coins < price) { toast('Te faltan monedas. Vende objetos o cumple encargos.'); return; }
-  state.coins -= price;
-  state.fogBought++;
-  state.cells[selected] = null;
-  toast('🗺️ Territorio expandido');
-  selected = null;
-  save();
-  render();
-}
-
-function tryDeliver() {
-  const q = QUESTS[state.questIndex];
-  if (!q) return;
-  for (const r of q.reqs) {
-    if (countItems(r.chain, r.tier) < r.count) { toast('Aún te faltan objetos para este encargo.'); return; }
-  }
-  // Consumir los objetos requeridos
-  for (const r of q.reqs) {
-    let left = r.count;
-    for (let i = CELLS - 1; i >= 0 && left > 0; i--) {
-      const c = state.cells[i];
-      if (c && c.type === 'item' && c.chain === r.chain && c.tier === r.tier) {
-        state.cells[i] = null;
-        left--;
+  // Tablero
+  for (let i = 0; i < CELLS; i++) {
+    const el = tilesEl.children[i];
+    const r = Math.floor(i / COLS), c = i % COLS;
+    let cls = 'tile';
+    if ((r + c) % 2 === 0) cls += ' g2';
+    if (PATHS.has(i)) cls = 'tile path';
+    let html = '';
+    if (SCENERY[i] && !isPlot(i)) html += '<span class="scenery">' + SCENERY[i] + '</span>';
+    if (isPlot(i)) {
+      cls += ' plot';
+      const cell = state.cells[i];
+      if (cell) {
+        const b = BIZ[cell.biz];
+        const acc = accrued(cell, now);
+        html += '<span class="item"><span class="icon">' + b.icon + '</span><span class="lvl">' + '★'.repeat(cell.lvl) + '</span></span>';
+        if (acc > 0) html += '<span class="money">💵' + (acc > 1 ? '×' + acc : '') + '</span>';
+      } else {
+        cls += ' empty';
+        html += '<span class="item"><span class="sale">Se<br>vende</span></span>';
       }
+      if (i === selected) cls += ' selected';
     }
+    el.className = cls;
+    el.innerHTML = html;
   }
-  state.coins += q.coins;
-  gainXp(q.xp);
-  state.questIndex++;
+
+  // Edificios e hitos
+  MILESTONES.forEach((mi, n) => {
+    $(mi.builds).classList.toggle('lot', state.milestonesDone < n + 1);
+  });
+  $('fog2-label').textContent = 'Se despeja al alcanzar ' + fmt(MILESTONES[1].at) + ' ganados';
+  $('fog3-label').textContent = 'Se despeja al alcanzar ' + fmt(MILESTONES[2].at) + ' ganados';
+  $('fog2').classList.toggle('cleared', state.milestonesDone >= 2);
+  $('fog3').classList.toggle('cleared', state.milestonesDone >= 3);
+
+  renderPanel();
+}
+
+function renderPanel() {
+  const p = $('panel-inner');
+
+  // Parcela seleccionada
+  if (selected !== null && isPlot(selected)) {
+    const cell = state.cells[selected];
+    if (!cell) {
+      // Solar vacío: catálogo de negocios
+      let row = '';
+      for (const key in BIZ) {
+        const b = BIZ[key];
+        const locked = state.milestonesDone < b.unlock;
+        const afford = state.cash >= b.cost;
+        row += '<div class="shop-item' + (locked || !afford ? ' locked' : '') + '" data-biz="' + key + '">' +
+          '<div class="si-icon">' + b.icon + '</div>' +
+          '<div class="si-name">' + b.name + '</div>' +
+          '<div class="si-cost">' + (locked ? '🔒' : fmt(b.cost)) + '</div>' +
+          '<div class="si-rate">+' + fmt(b.income) + ' / ' + (b.cycleMs / 1000) + 's</div></div>';
+      }
+      p.innerHTML = '<div id="p-body"><div id="p-name">Solar en venta</div>' +
+        '<div id="shop-row">' + row + '</div></div>';
+      p.querySelectorAll('.shop-item').forEach(el => {
+        el.addEventListener('click', () => buyBiz(el.dataset.biz));
+      });
+      return;
+    }
+    // Negocio existente
+    const b = BIZ[cell.biz];
+    const upCost = Math.round(b.cost * cell.lvl * 0.8);
+    const sellBack = Math.round(b.cost * cell.lvl * 0.5);
+    const maxed = cell.lvl >= MAX_LVL;
+    p.innerHTML = '<div id="p-icon">' + b.icon + '</div><div id="p-body">' +
+      '<div id="p-name">' + b.name + ' ' + '★'.repeat(cell.lvl) + '</div>' +
+      '<div id="p-sub">Produce ' + fmt(bizIncome(cell)) + ' cada ' + (b.cycleMs / 1000) + 's · toca el negocio para cobrar</div></div>' +
+      '<div id="p-actions">' +
+      (maxed ? '' : '<button class="btn' + (state.cash < upCost ? ' dim' : '') + '" id="btn-up">Mejorar ' + fmt(upCost) + '</button>') +
+      '<button class="btn secondary" id="btn-sellbiz">Vender ' + fmt(sellBack) + '</button></div>';
+    if (!maxed) $('btn-up').addEventListener('click', upgradeBiz);
+    $('btn-sellbiz').addEventListener('click', sellBiz);
+    return;
+  }
+
+  // Sin selección: estado general
+  const m = MILESTONES[state.milestonesDone];
+  const pend = state.pending.length;
+  p.innerHTML = '<div id="p-icon">🎩</div><div id="p-body">' +
+    '<div id="p-name">' + (m ? 'Objetivo: ' + m.title : 'Imperio completo') + '</div>' +
+    '<div id="p-text">' + (m ? 'Gana ' + fmt(m.at) + ' en total para construir el siguiente edificio del barrio.' : 'El barrio es tuyo.') + '</div>' +
+    '<div id="p-sub">' + (pend ? '⏳ ' + pend + ' inversión(es) por cobrar · ' : '') + 'Toca un solar para comprar un negocio.</div></div>';
+}
+
+// ================== Acciones ==================
+function buyBiz(key) {
+  const b = BIZ[key];
+  if (state.milestonesDone < b.unlock) { toast('Aún no disponible: progresa en el barrio para desbloquearlo.'); return; }
+  if (state.cash < b.cost) { toast('Te falta dinero: cobra tus negocios o espera un buen trato.'); return; }
+  state.cash -= b.cost;
+  state.cells[selected] = { type: 'biz', biz: key, lvl: 1, last: Date.now() };
+  popTile(selected);
+  toast(b.icon + ' ' + b.name + ' abierto. Produce ' + fmt(b.income) + ' cada ' + (b.cycleMs / 1000) + 's.');
+  save();
+  render();
+}
+
+function upgradeBiz() {
+  const cell = state.cells[selected];
+  const b = BIZ[cell.biz];
+  const upCost = Math.round(b.cost * cell.lvl * 0.8);
+  if (state.cash < upCost) { toast('Te falta dinero para la mejora.'); return; }
+  state.cash -= upCost;
+  cell.lvl++;
+  popTile(selected);
+  toast('⬆️ ' + b.name + ' mejorado: ahora produce ' + fmt(bizIncome(cell)) + '.');
+  save();
+  render();
+}
+
+function sellBiz() {
+  const cell = state.cells[selected];
+  const b = BIZ[cell.biz];
+  const sellBack = Math.round(b.cost * cell.lvl * 0.5);
+  gainCash(sellBack);
+  state.cells[selected] = null;
+  toast('Vendido por ' + fmt(sellBack) + '.');
   selected = null;
   save();
   render();
-  showLesson(q.lesson, '+' + q.coins + ' 🪙 · +' + q.xp + ' XP', () => {
-    if (state.questIndex >= QUESTS.length) $('screen-win').classList.add('show');
-  });
+  checkMilestones();
 }
 
-function showLesson(text, reward, onDone) {
-  $('lesson-quote').textContent = text;
-  $('lesson-reward').textContent = reward;
-  const el = $('lesson');
+function collectTile(i, ev) {
+  const cell = state.cells[i];
+  const now = Date.now();
+  const acc = accrued(cell, now);
+  if (acc <= 0) return false;
+  const amount = acc * bizIncome(cell);
+  gainCash(amount);
+  cell.last = now;
+  if (ev) floatCash(ev.clientX, ev.clientY - 10, amount);
+  save();
+  render();
+  checkMilestones();
+  return true;
+}
+
+// ================== Tratos ==================
+function openDeal() {
+  if (Date.now() < state.nextDealAt) {
+    const s = Math.ceil((state.nextDealAt - Date.now()) / 1000);
+    toast('El próximo trato llega en ' + s + 's. Los negocios buenos no se apuran.');
+    return;
+  }
+  if (state.dealQueue.length === 0) state.dealQueue = shuffle(DEALS.map((_, i) => i));
+  currentDeal = DEALS[state.dealQueue[0]];
+  $('deal-icon').textContent = currentDeal.icon;
+  $('deal-name').textContent = currentDeal.name;
+  $('deal-text').textContent = currentDeal.text;
+  const box = $('deal-options');
+  box.innerHTML = '';
+  currentDeal.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'deal-opt' + (state.cash < opt.cost ? ' disabled' : '');
+    btn.innerHTML = '<b>' + opt.label + '</b>' +
+      (opt.cost > 0 ? ' <span class="risk">Cuesta ' + fmt(opt.cost) + '</span>' : '');
+    btn.addEventListener('click', () => chooseDeal(i));
+    box.appendChild(btn);
+  });
+  $('deal').classList.add('show');
+}
+
+function chooseDeal(optIdx) {
+  const opt = currentDeal.options[optIdx];
+  if (state.cash < opt.cost) return;
+  state.cash -= opt.cost;
+  state.dealQueue.shift();
+  state.dealsTaken++;
+  state.nextDealAt = Date.now() + 25000 + Math.random() * 15000;
+
+  // Elegir resultado según probabilidades
+  let roll = Math.random(), outcome = opt.outcomes[opt.outcomes.length - 1];
+  for (const o of opt.outcomes) {
+    if (roll < o.p) { outcome = o; break; }
+    roll -= o.p;
+  }
+  let delta = -opt.cost;
+  if (outcome.now) {
+    if (outcome.now > 0) gainCash(outcome.now); else state.cash += outcome.now;
+    delta += outcome.now;
+  }
+  let extra = '';
+  if (outcome.later) {
+    state.pending.push({ due: Date.now() + outcome.laterMs, amount: outcome.later, label: currentDeal.name });
+    extra = ' (cobrarás ' + fmt(outcome.later) + ' en ' + Math.round(outcome.laterMs / 1000) + 's)';
+  }
+
+  $('deal').classList.remove('show');
+  $('result-text').textContent = outcome.text + extra;
+  const md = $('result-money');
+  md.textContent = (delta >= 0 ? '+' : '−') + fmt(Math.abs(delta));
+  md.className = 'money-delta ' + (delta >= 0 ? 'pos' : 'neg');
+  $('result-lesson').textContent = opt.lesson;
+  const el = $('result');
   el.classList.add('show');
   const close = () => {
     el.classList.remove('show');
     el.removeEventListener('pointerdown', close);
-    if (onDone) onDone();
+    checkMilestones();
+    checkBroke();
   };
   setTimeout(() => el.addEventListener('pointerdown', close), 400);
-}
 
-// Recarga de productores
-setInterval(() => {
-  if (!state || !state.started) return;
-  let changed = false;
-  const now = Date.now();
-  for (const c of state.cells) {
-    if (c && c.type === 'gen') {
-      const g = GENERATORS[c.id];
-      while (c.charges < g.max && now - c.last >= g.regenMs) {
-        c.charges++;
-        c.last += g.regenMs;
-        changed = true;
-      }
-      if (c.charges >= g.max) c.last = now;
-    }
-  }
-  if (changed) { save(); render(); }
-}, 1000);
-
-// ================== Interacción (tap y arrastre) ==================
-let drag = null;
-
-boardEl.addEventListener('pointerdown', e => {
-  const cellEl = e.target.closest('.cell');
-  if (!cellEl) return;
-  const idx = Array.prototype.indexOf.call(boardEl.children, cellEl);
-  drag = { from: idx, x0: e.clientX, y0: e.clientY, moved: false };
-});
-
-document.addEventListener('pointermove', e => {
-  if (!drag) return;
-  const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
-  if (!drag.moved && Math.hypot(dx, dy) > 10) {
-    const c = state.cells[drag.from];
-    if (!c || c.type === 'fog') { drag = null; return; } // la niebla no se arrastra
-    drag.moved = true;
-    const icon = c.type === 'gen' ? GENERATORS[c.id].icon : CHAINS[c.chain].icons[c.tier - 1];
-    ghost.textContent = icon;
-    ghost.style.display = 'block';
-    boardEl.children[drag.from].style.opacity = '.3';
-  }
-  if (drag.moved) {
-    ghost.style.left = e.clientX + 'px';
-    ghost.style.top = e.clientY + 'px';
-  }
-});
-
-document.addEventListener('pointerup', e => {
-  if (!drag) return;
-  const d = drag;
-  drag = null;
-  ghost.style.display = 'none';
-  if (boardEl.children[d.from]) boardEl.children[d.from].style.opacity = '';
-
-  if (!d.moved) { handleTap(d.from); return; }
-
-  const targetEl = document.elementFromPoint(e.clientX, e.clientY);
-  const cellEl = targetEl && targetEl.closest('.cell');
-  if (!cellEl) { render(); return; }
-  const to = Array.prototype.indexOf.call(boardEl.children, cellEl);
-  if (to === d.from) { render(); return; }
-
-  const a = state.cells[d.from], b = state.cells[to];
-  if (b && b.type === 'fog') { toast('Primero compra ese territorio.'); render(); return; }
-
-  if (!b) {
-    state.cells[to] = a;
-    state.cells[d.from] = null;
-  } else if (a.type === 'item' && b.type === 'item' && a.chain === b.chain && a.tier === b.tier) {
-    if (a.tier >= MAX_TIER) { toast('Ya es el nivel máximo de su cadena.'); render(); return; }
-    state.cells[to] = { type: 'item', chain: a.chain, tier: a.tier + 1 };
-    state.cells[d.from] = null;
-    state.coins += 1; // pequeña propina por fusionar
-    gainXp(2);
-    popCell(to);
-    toast('✨ ' + CHAINS[a.chain].names[a.tier] + ' creado · +1 🪙');
-  } else {
-    // Intercambiar posiciones
-    state.cells[to] = a;
-    state.cells[d.from] = b;
-  }
-  selected = null;
+  currentDeal = null;
   save();
   render();
-});
-
-document.addEventListener('pointercancel', () => {
-  if (drag && boardEl.children[drag.from]) boardEl.children[drag.from].style.opacity = '';
-  drag = null;
-  ghost.style.display = 'none';
-});
-
-function handleTap(idx) {
-  const c = state.cells[idx];
-  if (c && c.type === 'gen') {
-    selected = idx;
-    produce(idx);
-    return;
-  }
-  selected = (selected === idx || !c) ? null : idx;
-  render();
 }
 
-$('quest-deliver').addEventListener('click', tryDeliver);
+// ================== Hitos y finales ==================
+function checkMilestones() {
+  const m = MILESTONES[state.milestonesDone];
+  if (!m || state.earned < m.at) return;
+  state.milestonesDone++;
+  save();
+  render();
+  const lm = $(m.builds);
+  lm.classList.add('built-anim');
+  setTimeout(() => lm.classList.remove('built-anim'), 900);
+  $('ch-label').textContent = 'Hito ' + state.milestonesDone + ' de ' + MILESTONES.length;
+  $('ch-title').textContent = m.title;
+  $('ch-text').textContent = m.text;
+  if (state.milestonesDone >= MILESTONES.length) {
+    $('win-stats').textContent = 'Patrimonio ganado: ' + fmt(state.earned) + ' · Tratos cerrados: ' + state.dealsTaken;
+    setTimeout(() => $('screen-win').classList.add('show'), 600);
+  } else {
+    setTimeout(() => $('chapter').classList.add('show'), 600);
+  }
+}
 
+function checkBroke() {
+  // Quiebra: sin efectivo para el negocio más barato, sin negocios y sin cobros pendientes
+  if (state.cash >= BIZ.fruta.cost) return;
+  if (state.pending.length > 0) return;
+  const now = Date.now();
+  for (let i = 0; i < CELLS; i++) {
+    const c = state.cells[i];
+    if (c) {
+      if (accrued(c, now) > 0) return; // aún hay algo que cobrar
+      return; // tiene negocios produciendo
+    }
+  }
+  $('broke-stats').textContent = 'Llegaste a ganar ' + fmt(state.earned) + '. El barrio recordará tu nombre... un tiempo.';
+  $('screen-broke').classList.add('show');
+}
+
+// ================== Bucle de tiempo ==================
+setInterval(() => {
+  if (!state || !state.started) return;
+  const now = Date.now();
+  // Pagos diferidos que vencen
+  const due = state.pending.filter(p => p.due <= now);
+  if (due.length) {
+    state.pending = state.pending.filter(p => p.due > now);
+    for (const p of due) {
+      gainCash(p.amount);
+      toast('💰 ' + p.label + ' paga: +' + fmt(p.amount));
+    }
+    save();
+    checkMilestones();
+  }
+  render();
+}, 1000);
+
+// ================== Interacción ==================
+tilesEl.addEventListener('pointerup', e => {
+  const tile = e.target.closest('.tile.plot');
+  if (!tile) { selected = null; render(); return; }
+  const i = Array.prototype.indexOf.call(tilesEl.children, tile);
+  const cell = state.cells[i];
+  if (cell) {
+    collectTile(i, e); // cobrar si hay algo pendiente
+    selected = i;      // y mostrar su panel
+  } else {
+    selected = (selected === i) ? null : i;
+  }
+  render();
+});
+
+function popTile(i) {
+  requestAnimationFrame(() => {
+    const icon = tilesEl.children[i].querySelector('.icon');
+    if (icon) icon.classList.add('pop');
+  });
+}
+
+$('btn-deal').addEventListener('click', openDeal);
+$('ch-btn').addEventListener('click', () => $('chapter').classList.remove('show'));
 $('btn-start').addEventListener('click', () => {
   $('screen-start').classList.remove('show');
   state.started = true;
+  state.nextDealAt = Date.now() + 15000;
   save();
+  render();
 });
 $('btn-continue').addEventListener('click', () => $('screen-win').classList.remove('show'));
+$('btn-restart').addEventListener('click', () => {
+  localStorage.removeItem(SAVE_KEY);
+  state = freshState();
+  state.started = true;
+  selected = null;
+  $('screen-broke').classList.remove('show');
+  save();
+  render();
+});
 
 // ================== Inicio ==================
 (function init() {
   for (let i = 0; i < CELLS; i++) {
     const div = document.createElement('div');
-    div.className = 'cell';
-    boardEl.appendChild(div);
+    div.className = 'tile';
+    tilesEl.appendChild(div);
   }
   state = load() || freshState();
   if (state.started) $('screen-start').classList.remove('show');
