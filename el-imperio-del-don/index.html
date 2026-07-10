@@ -104,7 +104,8 @@
     50% { box-shadow: 0 0 12px rgba(212,160,23,.9); }
   }
 
-  /* ================= Mapa / mundo ================= */
+  /* ================= Mapa / mundo (3D) ================= */
+  :root { --tilt: 45deg; --untilt: -45deg; }
   #world-wrap {
     flex: 1;
     display: flex;
@@ -113,6 +114,8 @@
     min-height: 0;
     overflow: hidden;
     padding: 4px;
+    perspective: 1000px;
+    background: linear-gradient(180deg, #9dd3ea 0%, #c6e6f2 34%, #e8f2e0 45%, var(--grass2) 60%);
   }
   #map {
     position: relative;
@@ -120,6 +123,19 @@
     max-height: 100%;
     max-width: 100%;
     height: 100%;
+    transform: rotateX(var(--tilt)) scale(.97) translateY(-3%);
+    transform-origin: 50% 60%;
+    transform-style: preserve-3d;
+  }
+  /* Base de tierra bajo la isla del barrio */
+  #map::after {
+    content: '';
+    position: absolute;
+    inset: -1%;
+    background: linear-gradient(180deg, #9a7a4d, #7c6039);
+    border-radius: 14px;
+    transform: translateZ(-16px);
+    box-shadow: 0 0 30px rgba(51,41,31,.35);
   }
   #tiles {
     position: absolute;
@@ -127,8 +143,9 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: repeat(10, 1fr);
+    transform-style: preserve-3d;
   }
-  .tile { position: relative; background: var(--grass1); }
+  .tile { position: relative; background: var(--grass1); transform-style: preserve-3d; }
   .tile.g2 { background: var(--grass2); }
   .tile.path {
     background:
@@ -136,14 +153,17 @@
       radial-gradient(circle at 70% 60%, var(--path-dot) 10%, transparent 11%),
       var(--path);
   }
+  /* Decorado "de pie" sobre el suelo inclinado */
   .tile .scenery {
     position: absolute;
     inset: 0;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     font-size: clamp(16px, 4.5vh, 30px);
     pointer-events: none;
+    transform: rotateX(var(--untilt));
+    transform-origin: 50% 92%;
   }
   /* Casilla jugable: leve realce sobre el pasto */
   .tile.plot { cursor: pointer; }
@@ -163,19 +183,23 @@
     background: rgba(248,240,220,.5);
     box-shadow: inset 0 0 0 2px var(--gold-bright);
   }
+  /* Objetos "de pie" sobre el suelo inclinado */
   .tile .item {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     z-index: 2;
+    transform: rotateX(var(--untilt));
+    transform-origin: 50% 90%;
+    pointer-events: none;
   }
   .tile .icon {
     font-size: clamp(18px, 5vh, 34px);
     line-height: 1;
-    filter: drop-shadow(0 2px 2px rgba(51,41,31,.35));
+    filter: drop-shadow(0 3px 3px rgba(51,41,31,.4));
   }
   .tile .tier {
     font-size: clamp(6px, 1.2vh, 9px);
@@ -187,8 +211,8 @@
   }
   .tile .charges {
     position: absolute;
-    top: 2%;
-    right: 5%;
+    top: -12%;
+    right: 2%;
     font-size: clamp(8px, 1.6vh, 12px);
     font-weight: bold;
     color: #fff;
@@ -210,7 +234,7 @@
     60%  { transform: scale(1.25); }
     to   { transform: scale(1); }
   }
-  /* Niebla por casilla, estilo nubes */
+  /* Niebla por casilla: nubes flotando sobre el terreno */
   .tile.fogt { cursor: default; }
   .tile.fogt .cloud {
     position: absolute;
@@ -220,14 +244,22 @@
     justify-content: center;
     font-size: clamp(24px, 6vh, 42px);
     opacity: .96;
-    filter: drop-shadow(0 2px 3px rgba(120,120,120,.3));
+    filter: drop-shadow(0 6px 5px rgba(90,90,90,.35));
     pointer-events: none;
     z-index: 5;
+    transform: translateZ(16px);
+    animation: hover 3.2s infinite ease-in-out;
+  }
+  .tile.fogt:nth-child(2n) .cloud { animation-delay: -1.6s; }
+  @keyframes hover {
+    0%,100% { transform: translateZ(16px); }
+    50% { transform: translateZ(23px); }
   }
   .fog-tag {
     position: absolute;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) rotateX(var(--untilt));
+    transform-origin: 50% 100%;
     z-index: 6;
     font-size: clamp(10px, 1.9vh, 13px);
     color: #6b6355;
@@ -266,13 +298,15 @@
     to   { opacity: 0; transform: translateY(-40px); }
   }
 
-  /* ================= Edificios emblemáticos ================= */
+  /* ================= Edificios emblemáticos (de pie en 3D) ================= */
   .landmark {
     position: absolute;
     width: 27%;
     z-index: 4;
     text-align: center;
     pointer-events: none;
+    transform: rotateX(var(--untilt));
+    transform-origin: 50% 100%;
   }
   .landmark .build { position: relative; margin: 0 auto; width: 92%; }
   .landmark .roof {
@@ -542,14 +576,14 @@
           <div class="awning"></div>
         </div>
       </div>
-      <div class="landmark lm-club lot" id="lm-club" style="left:1.5%; bottom:1.5%;">
+      <div class="landmark lm-club lot" id="lm-club" style="left:3.5%; bottom:2.5%;">
         <div class="build">
           <div class="roof"></div>
           <div class="facade"><div class="emoji">🎷</div><div class="plate">Club Nocturno</div></div>
           <div class="awning"></div>
         </div>
       </div>
-      <div class="landmark lm-casa lot" id="lm-casa" style="right:1.5%; bottom:1.5%;">
+      <div class="landmark lm-casa lot" id="lm-casa" style="right:6%; bottom:2.5%;">
         <div class="build">
           <div class="roof"></div>
           <div class="facade"><div class="emoji">🏛️</div><div class="plate">Casa del Don</div></div>
@@ -1033,8 +1067,8 @@ function render() {
       if (cell) {
         if (cell.type === 'gen') {
           cls += ' gen';
-          html += '<span class="item"><span class="icon">' + GENERATORS[cell.id].icon + '</span><span class="tier"></span></span>' +
-                  '<span class="charges">' + cell.charges + '</span>';
+          html += '<span class="item"><span class="icon">' + GENERATORS[cell.id].icon + '</span><span class="tier"></span>' +
+                  '<span class="charges">' + cell.charges + '</span></span>';
         } else if (cell.type === 'chest') {
           cls += ' chest';
           html += '<span class="item"><span class="icon">🎁</span><span class="tier"></span></span>';
