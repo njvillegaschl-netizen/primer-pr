@@ -105,7 +105,7 @@
   }
 
   /* ================= Mapa / mundo (3D) ================= */
-  :root { --tilt: 45deg; --untilt: -45deg; }
+  :root { --tilt: 45deg; --untilt: -45deg; --yaw: 0deg; --d: 4.6vh; }
   #world-wrap {
     flex: 1;
     display: flex;
@@ -123,13 +123,14 @@
     max-height: 100%;
     max-width: 100%;
     height: 100%;
-    transform: rotateX(var(--tilt)) scale(.97) translateY(-3%);
+    transform: translateY(-3%) rotateX(var(--tilt)) rotateZ(var(--yaw)) scale(.97);
     transform-origin: 50% 60%;
     transform-style: preserve-3d;
   }
   /* Base de tierra bajo la isla del barrio */
   #map::after {
     content: '';
+    pointer-events: none;
     position: absolute;
     inset: -1%;
     background: linear-gradient(180deg, #9a7a4d, #7c6039);
@@ -162,7 +163,7 @@
     justify-content: center;
     font-size: clamp(16px, 4.5vh, 30px);
     pointer-events: none;
-    transform: rotateX(var(--untilt));
+    transform: rotateZ(calc(-1 * var(--yaw))) rotateX(var(--untilt));
     transform-origin: 50% 92%;
   }
   /* Casilla jugable: leve realce sobre el pasto */
@@ -192,7 +193,7 @@
     align-items: center;
     justify-content: flex-end;
     z-index: 2;
-    transform: rotateX(var(--untilt));
+    transform: rotateZ(calc(-1 * var(--yaw))) rotateX(var(--untilt));
     transform-origin: 50% 90%;
     pointer-events: none;
   }
@@ -258,7 +259,7 @@
   .fog-tag {
     position: absolute;
     left: 50%;
-    transform: translateX(-50%) rotateX(var(--untilt));
+    transform: translateX(-50%) rotateZ(calc(-1 * var(--yaw))) rotateX(var(--untilt));
     transform-origin: 50% 100%;
     z-index: 6;
     font-size: clamp(10px, 1.9vh, 13px);
@@ -298,35 +299,73 @@
     to   { opacity: 0; transform: translateY(-40px); }
   }
 
-  /* ================= Edificios emblemáticos (de pie en 3D) ================= */
+  /* ============ Edificios emblemáticos: cajas 3D con volumen ============ */
   .landmark {
     position: absolute;
     width: 27%;
     z-index: 4;
     text-align: center;
     pointer-events: none;
-    transform: rotateX(var(--untilt));
+    transform-style: preserve-3d;
+  }
+  /* Sombra sobre el suelo */
+  .landmark::before {
+    content: '';
+    position: absolute;
+    inset: -6% -4%;
+    background: radial-gradient(ellipse at 50% 50%, rgba(51,41,31,.3), transparent 70%);
+    border-radius: 50%;
+  }
+  .b3d {
+    position: relative;
+    width: 92%;
+    margin: 0 auto;
+    aspect-ratio: 1 / 0.85;
+    transform: rotateX(-90deg);
     transform-origin: 50% 100%;
+    transform-style: preserve-3d;
   }
-  .landmark .build { position: relative; margin: 0 auto; width: 92%; }
-  .landmark .roof {
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 14px solid var(--terra);
-    border-radius: 2px;
-    margin: 0 4%;
-  }
-  .landmark .facade {
+  .face { position: absolute; }
+  .face.front {
+    inset: 0;
+    transform: translateZ(var(--d));
     background: linear-gradient(180deg, #f3e6c3, #e6d3a3);
     border: 2px solid rgba(51,41,31,.35);
-    border-radius: 4px 4px 6px 6px;
-    padding: 4% 2% 6%;
-    box-shadow: 0 3px 6px rgba(51,41,31,.35);
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 3%;
   }
-  .landmark .emoji { font-size: clamp(20px, 4.6vh, 34px); line-height: 1.15; }
+  .face.back {
+    inset: 0;
+    transform: rotateY(180deg);
+    background: #d9c493;
+    border: 2px solid rgba(51,41,31,.3);
+  }
+  .face.side {
+    top: 0;
+    bottom: 0;
+    width: var(--d);
+    background: linear-gradient(180deg, #dcc793, #c4ab74);
+    border: 2px solid rgba(51,41,31,.3);
+  }
+  .face.side.left  { left: 0;  transform-origin: left center;  transform: rotateY(-90deg); }
+  .face.side.right { right: 0; transform-origin: right center; transform: rotateY(90deg); }
+  .face.top {
+    left: 0;
+    right: 0;
+    top: 0;
+    height: var(--d);
+    background: var(--terra);
+    border: 2px solid rgba(51,41,31,.35);
+    transform-origin: top center;
+    transform: rotateX(90deg);
+  }
+  .landmark .emoji { font-size: clamp(16px, 4vh, 30px); line-height: 1.15; }
   .landmark .plate {
-    margin-top: 2px;
     background: var(--ink);
     color: var(--cream);
     font-size: clamp(7px, 1.4vh, 10px);
@@ -334,34 +373,40 @@
     border-radius: 3px;
     padding: 2px 3px;
     line-height: 1.15;
+    max-width: 100%;
   }
   .landmark .awning {
-    height: 7px;
+    height: 6px;
+    width: 88%;
     border-radius: 0 0 5px 5px;
     background: repeating-linear-gradient(90deg, var(--red) 0 8px, var(--cream) 8px 16px);
-    margin: 3px 6% 0;
     box-shadow: 0 2px 3px rgba(51,41,31,.3);
   }
-  .landmark.lm-genco .roof { border-bottom-color: var(--olive); }
+  .landmark.lm-genco .face.top { background: var(--olive); }
   .landmark.lm-genco .awning { background: repeating-linear-gradient(90deg, var(--olive) 0 8px, var(--cream) 8px 16px); }
-  .landmark.lm-club .roof { border-bottom-color: var(--blue); }
-  .landmark.lm-club .facade { background: linear-gradient(180deg, #4d5f80, var(--blue)); }
+  .landmark.lm-club .face.top { background: var(--blue); }
+  .landmark.lm-club .face.front { background: linear-gradient(180deg, #4d5f80, var(--blue)); }
+  .landmark.lm-club .face.side { background: linear-gradient(180deg, #46587c, #38486a); }
+  .landmark.lm-club .face.back { background: #38486a; }
   .landmark.lm-club .awning { background: repeating-linear-gradient(90deg, var(--blue) 0 8px, #c8cede 8px 16px); }
-  .landmark.lm-casa .roof { border-bottom-color: var(--gold); }
-  .landmark.lm-casa .facade { background: linear-gradient(180deg, #f8efd4, #ecdcae); }
+  .landmark.lm-casa .face.top { background: var(--gold); }
+  .landmark.lm-casa .face.front { background: linear-gradient(180deg, #f8efd4, #ecdcae); }
   .landmark.lm-casa .awning { display: none; }
-  .landmark.lot .roof, .landmark.lot .awning { visibility: hidden; }
-  .landmark.lot .facade {
+  /* Solar: solo un plano punteado, sin volumen */
+  .landmark.lot::before { display: none; }
+  .landmark.lot .face.back, .landmark.lot .face.side, .landmark.lot .face.top,
+  .landmark.lot .awning { visibility: hidden; }
+  .landmark.lot .face.front {
+    transform: translateZ(0);
     background: rgba(238,225,189,.5);
     border: 2px dashed rgba(51,41,31,.4);
-    box-shadow: none;
   }
   .landmark.lot .emoji { filter: grayscale(1); opacity: .55; }
-  .landmark.built-anim .build { animation: buildUp .8s ease; }
+  .landmark.built-anim .b3d { animation: buildUp .8s ease; }
   @keyframes buildUp {
-    0% { transform: scale(.5) translateY(20%); opacity: 0; }
-    60% { transform: scale(1.12); opacity: 1; }
-    100% { transform: scale(1); }
+    0% { transform: rotateX(-90deg) scale(.4); opacity: 0; }
+    60% { transform: rotateX(-90deg) scale(1.1); opacity: 1; }
+    100% { transform: rotateX(-90deg) scale(1); }
   }
 
   /* ================= Panel inferior ================= */
@@ -563,31 +608,39 @@
     <div id="map">
       <div id="tiles"></div>
       <div class="landmark lm-genco lot" id="lm-genco" style="left:1.5%; top:3%;">
-        <div class="build">
-          <div class="roof"></div>
-          <div class="facade"><div class="emoji">🫒</div><div class="plate">Genco Olive Oil</div></div>
-          <div class="awning"></div>
+        <div class="b3d">
+          <div class="face back"></div>
+          <div class="face side left"></div>
+          <div class="face side right"></div>
+          <div class="face top"></div>
+          <div class="face front"><div class="emoji">🫒</div><div class="plate">Genco Olive Oil</div><div class="awning"></div></div>
         </div>
       </div>
       <div class="landmark lm-trattoria lot" id="lm-trattoria" style="right:1.5%; top:3%;">
-        <div class="build">
-          <div class="roof"></div>
-          <div class="facade"><div class="emoji">🍝</div><div class="plate">Trattoria</div></div>
-          <div class="awning"></div>
+        <div class="b3d">
+          <div class="face back"></div>
+          <div class="face side left"></div>
+          <div class="face side right"></div>
+          <div class="face top"></div>
+          <div class="face front"><div class="emoji">🍝</div><div class="plate">Trattoria</div><div class="awning"></div></div>
         </div>
       </div>
       <div class="landmark lm-club lot" id="lm-club" style="left:3.5%; bottom:2.5%;">
-        <div class="build">
-          <div class="roof"></div>
-          <div class="facade"><div class="emoji">🎷</div><div class="plate">Club Nocturno</div></div>
-          <div class="awning"></div>
+        <div class="b3d">
+          <div class="face back"></div>
+          <div class="face side left"></div>
+          <div class="face side right"></div>
+          <div class="face top"></div>
+          <div class="face front"><div class="emoji">🎷</div><div class="plate">Club Nocturno</div><div class="awning"></div></div>
         </div>
       </div>
       <div class="landmark lm-casa lot" id="lm-casa" style="right:6%; bottom:2.5%;">
-        <div class="build">
-          <div class="roof"></div>
-          <div class="facade"><div class="emoji">🏛️</div><div class="plate">Casa del Don</div></div>
-          <div class="awning"></div>
+        <div class="b3d">
+          <div class="face back"></div>
+          <div class="face side left"></div>
+          <div class="face side right"></div>
+          <div class="face top"></div>
+          <div class="face front"><div class="emoji">🏛️</div><div class="plate">Casa del Don</div><div class="awning"></div></div>
         </div>
       </div>
       <div class="fog-tag" id="fog-tag-2" style="top:57%;">☁️ Se despeja al completar el capítulo 2</div>
@@ -637,6 +690,7 @@
     <p>Nueva York, 1945. La familia empieza con un patio, un olivar y $80.</p>
     <p><b>Toca los productores</b> 🫒 👨‍🍳 y <b>arrastra dos objetos iguales</b> para fusionarlos. Cumple encargos para construir el barrio y despejar la niebla. Y cuando llegue un <b>trato</b> 🤝, decide bien: puedes ganar mucho dinero... o perderlo todo.</p>
     <p class="legend">🪙 Dinero · 🍊 Negocios · 🧢 Familia · ✉️ Favores · 🎁 Cofres</p>
+    <p class="legend">↔️ Arrastra el pasto o el cielo para girar la cámara</p>
     <button class="big-btn" id="btn-start">Abrir el negocio</button>
   </div>
 
@@ -1438,15 +1492,37 @@ setInterval(() => {
   render();
 }, 1000);
 
+// ================== Cámara orbital ==================
+// El hit-testing de eventos con preserve-3d es poco fiable en algunos
+// navegadores: resolvemos la casilla con elementsFromPoint, que sí acierta.
+function plotTileAt(x, y) {
+  for (const el of document.elementsFromPoint(x, y)) {
+    if (el.classList && el.classList.contains('tile') && el.classList.contains('plot')) return el;
+  }
+  return null;
+}
+let cam = null, yaw = 0;
+document.getElementById('world-wrap').addEventListener('pointerdown', e => {
+  const tile = plotTileAt(e.clientX, e.clientY);
+  if (tile) {
+    drag = { from: Array.prototype.indexOf.call(tilesEl.children, tile), x0: e.clientX, y0: e.clientY, moved: false };
+    return;
+  }
+  selected = null;
+  render();
+  cam = { x0: e.clientX, yaw0: yaw };
+});
+document.addEventListener('pointermove', e => {
+  if (!cam) return;
+  yaw = Math.max(-30, Math.min(30, cam.yaw0 + (e.clientX - cam.x0) * 0.12));
+  document.documentElement.style.setProperty('--yaw', yaw.toFixed(1) + 'deg');
+});
+document.addEventListener('pointerup', () => { cam = null; });
+document.addEventListener('pointercancel', () => { cam = null; });
+
 // ================== Interacción (tap y arrastre) ==================
 let drag = null;
 
-tilesEl.addEventListener('pointerdown', e => {
-  const tile = e.target.closest('.tile.plot');
-  if (!tile) { selected = null; render(); return; }
-  const i = Array.prototype.indexOf.call(tilesEl.children, tile);
-  drag = { from: i, x0: e.clientX, y0: e.clientY, moved: false };
-});
 
 document.addEventListener('pointermove', e => {
   if (!drag) return;
@@ -1475,8 +1551,7 @@ document.addEventListener('pointerup', e => {
 
   if (!d.moved) { handleTap(d.from, e); return; }
 
-  const targetEl = document.elementFromPoint(e.clientX, e.clientY);
-  const tile = targetEl && targetEl.closest('.tile.plot');
+  const tile = plotTileAt(e.clientX, e.clientY);
   if (!tile) { render(); return; }
   const to = Array.prototype.indexOf.call(tilesEl.children, tile);
   if (to === d.from) { render(); return; }
